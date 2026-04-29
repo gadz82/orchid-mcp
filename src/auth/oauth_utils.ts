@@ -118,6 +118,21 @@ export function epochSeconds(): number {
     return Math.floor(Date.now() / 1000);
 }
 
+/**
+ * Squash an unknown error into a short string for structured logging.
+ *
+ * The raw ``err`` object frequently carries tokens, request bodies, or
+ * stack traces upstream HTTP libraries pack onto their custom errors.
+ * Pino serialises that whole tree by default — this helper bottlenecks
+ * the surface to one ``message`` field so secrets can't leak by
+ * accident.
+ */
+export function errorMessage(err: unknown): string {
+    if (err instanceof Error) return err.message;
+    return String(err);
+}
+
+
 export function validateBaseUrl(base: string): void {
     try {
         const u = new URL(base);

@@ -1,0 +1,39 @@
+name: orchid-mcp CI
+
+on:
+    push:
+        paths:
+            - "orchid-mcp/**"
+            - ".github/workflows/orchid-mcp*.yml"
+    pull_request:
+        paths:
+            - "orchid-mcp/**"
+            - ".github/workflows/orchid-mcp*.yml"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: orchid-mcp
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Node 20
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+                  cache-dependency-path: orchid-mcp/package-lock.json
+
+            - name: Install
+              run: npm ci
+
+            - name: Typecheck
+              run: npm run typecheck
+
+            - name: Lint
+              run: npm run lint
+
+            - name: Test
+              run: npm test

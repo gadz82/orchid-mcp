@@ -321,6 +321,168 @@ describe("Streamable HTTP server — transport error paths", () => {
     });
 });
 
+// ── Session-fixation guard ────────────────────────────────────
+//
+// A session ID + transport pair created by user A must NOT be
+// reachable to user B even when B knows the UUID. The gateway
+// pins each session to its initiator's :attr:`OrchidIdentity.subject`
+// and returns 403 on mismatch.
+
+class _PerBearerAuthStrategy implements AuthStrategy {
+    readonly mode = "service_account" as const;
+    private readonly subjectByBearer: Record<string, string>;
+    constructor(subjectByBearer: Record<string, string>) {
+        this.subjectByBearer = subjectByBearer;
+    }
+    async resolve(ctx: MCPRequestContext): Promise<OrchidIdentity> {
+        const bearer = ctx.accessToken ?? "";
+        const subject = this.subjectByBearer[bearer];
+        if (subject === undefined) {
+            throw new OrchidUnauthorizedError(`unknown bearer: ${bearer}`);
+        }
+        return { bearer, subject };
+    }
+}
+
+async function _startGatewayWithAuth(
+    stubClient: StubClient,
+    auth: AuthStrategy,
+): Promise<{ baseUrl: string; stop: () => Promise<void> }> {
+    const ctx: AppContext = {
+        settings: {} as AppContext["settings"],
+        logger: createLogger("silent"),
+        httpClient: stubClient,
+        sessionMap: new MemorySessionMap({ ttlSeconds: 60 }),
+        authStrategy: auth,
+        rateLimiter: new NoopRateLimiter(),
+    };
+    const built = await buildServer({ ctx });
+    await new Promise<void>((resolve) => built.httpServer.listen(0, "127.0.0.1", resolve));
+    const addr = built.httpServer.address() as AddressInfo;
+    const baseUrl = `http://127.0.0.1:${String(addr.port)}`;
+    const stop = async (): Promise<void> => {
+        await built.close();
+        await new Promise<void>((resolve) => built.httpServer.close(() => resolve()));
+    };
+    return { baseUrl, stop };
+}
+
+describe("Streamable HTTP server — session-fixation guard", () => {
+    let stopGateway: (() => Promise<void>) | null = null;
+    let baseUrl = "";
+
+    beforeEach(async () => {
+        const auth = new _PerBearerAuthStrategy({
+            "tok-A": "subject-A",
+            "tok-B": "subject-B",
+        });
+        const { baseUrl: url, stop } = await _startGatewayWithAuth(new StubClient(), auth);
+        stopGateway = stop;
+        baseUrl = url;
+    });
+
+    afterEach(async () => {
+        if (stopGateway !== null) {
+            await stopGateway();
+            stopGateway = null;
+        }
+    });
+
+    async function _initializeAs(bearer: string): Promise<string> {
+        const res = await fetch(`${baseUrl}/mcp`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json, text/event-stream",
+                Authorization: `Bearer ${bearer}`,
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: 1,
+                method: "initialize",
+                params: {
+                    protocolVersion: "2025-03-26",
+                    capabilities: {},
+                    clientInfo: { name: "test", version: "0.0.1" },
+                },
+            }),
+        });
+        expect(res.status).toBe(200);
+        const sessionId = res.headers.get("mcp-session-id");
+        expect(sessionId).not.toBeNull();
+        // Drain the SSE body so the connection is closed cleanly.
+        await res.text();
+        return sessionId as string;
+    }
+
+    it("rejects POST /mcp when bearer subject differs from initiator", async () => {
+        const sessionId = await _initializeAs("tok-A");
+
+        const res = await fetch(`${baseUrl}/mcp`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json, text/event-stream",
+                "mcp-session-id": sessionId,
+                Authorization: "Bearer tok-B",
+            },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" }),
+        });
+
+        expect(res.status).toBe(403);
+        const body = (await res.json()) as { error: string };
+        expect(body.error).toBe("session_subject_mismatch");
+    });
+
+    it("rejects GET /mcp when bearer subject differs from initiator", async () => {
+        const sessionId = await _initializeAs("tok-A");
+
+        const res = await fetch(`${baseUrl}/mcp`, {
+            method: "GET",
+            headers: {
+                Accept: "text/event-stream",
+                "mcp-session-id": sessionId,
+                Authorization: "Bearer tok-B",
+            },
+        });
+
+        expect(res.status).toBe(403);
+    });
+
+    it("rejects DELETE /mcp when bearer subject differs from initiator", async () => {
+        const sessionId = await _initializeAs("tok-A");
+
+        const res = await fetch(`${baseUrl}/mcp`, {
+            method: "DELETE",
+            headers: {
+                "mcp-session-id": sessionId,
+                Authorization: "Bearer tok-B",
+            },
+        });
+
+        expect(res.status).toBe(403);
+    });
+
+    it("accepts POST /mcp from the initiator's own bearer", async () => {
+        const sessionId = await _initializeAs("tok-A");
+
+        const res = await fetch(`${baseUrl}/mcp`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json, text/event-stream",
+                "mcp-session-id": sessionId,
+                Authorization: "Bearer tok-A",
+            },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" }),
+        });
+
+        // Same-subject reuse goes through; 200/202 is fine — what matters
+        // is we did NOT see the 403 reserved for cross-user reuse.
+        expect(res.status).not.toBe(403);
+    });
+});
+
 // ── HTTP-layer auth enforcement (MCP 2025-03-26) ──────────────
 //
 // The /mcp endpoint MUST return 401 + WWW-Authenticate on

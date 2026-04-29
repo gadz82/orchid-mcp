@@ -54,6 +54,34 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
 
     const transports = new Map<string, StreamableHTTPServerTransport>();
     const servers = new Map<string, McpServer>();
+    /**
+     * ``sessionId → subject`` map of the user who first ran
+     * ``initialize`` for that session. Every subsequent request that
+     * supplies the same session ID must come from the same subject,
+     * otherwise a hostile client that learned a UUID could route
+     * requests through another user's pre-configured ``McpServer``
+     * instance — the per-session ``getGatewayConfig`` view (tool
+     * overrides + prompts) is registered with the initiator's bearer
+     * and would leak across the user boundary without this binding.
+     * Cleared in the same ``onclose`` hook that disposes the transport.
+     */
+    const sessionOwners = new Map<string, string>();
+
+    const rejectSessionMismatch = (
+        res: ServerResponse,
+        sessionId: string,
+        actualSubject: string,
+        expectedSubject: string,
+    ): void => {
+        logger.warn(
+            { sessionId, actualSubject, expectedSubject },
+            "session subject mismatch — rejecting cross-user session reuse",
+        );
+        writeJson(res, 403, {
+            error: "session_subject_mismatch",
+            message: "The supplied mcp-session-id was initialised by a different user.",
+        });
+    };
 
     const handleMcpPost = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
         let body: unknown;
@@ -84,6 +112,11 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
         if (sessionId !== null) {
             const existing = transports.get(sessionId);
             if (existing !== undefined) {
+                const owner = sessionOwners.get(sessionId);
+                if (owner !== undefined && owner !== identity.subject) {
+                    rejectSessionMismatch(res, sessionId, identity.subject, owner);
+                    return;
+                }
                 await existing.handleRequest(req, res, body);
                 return;
             }
@@ -105,12 +138,18 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
                 applyGatewayConfig(mcpServer, toolHandles, gatewayConfig, logger);
             }
 
+            const initiatorSubject = identity.subject;
+
             const transport = new StreamableHTTPServerTransport({
                 sessionIdGenerator: () => randomUUID(),
                 onsessioninitialized: (sid) => {
                     transports.set(sid, transport);
                     servers.set(sid, mcpServer);
-                    logger.info({ sessionId: sid }, "mcp session initialized");
+                    sessionOwners.set(sid, initiatorSubject);
+                    logger.info(
+                        { sessionId: sid, subject: initiatorSubject },
+                        "mcp session initialized",
+                    );
                 },
             });
 
@@ -119,6 +158,7 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
                 if (sid !== undefined) {
                     transports.delete(sid);
                     servers.delete(sid);
+                    sessionOwners.delete(sid);
                     logger.info({ sessionId: sid }, "mcp session closed");
                 }
             };
@@ -161,6 +201,11 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
         const transport = transports.get(sessionId);
         if (transport === undefined) {
             writeJson(res, 404, { error: "unknown_session" });
+            return;
+        }
+        const owner = sessionOwners.get(sessionId);
+        if (owner !== undefined && owner !== identity.subject) {
+            rejectSessionMismatch(res, sessionId, identity.subject, owner);
             return;
         }
         await transport.handleRequest(req, res);

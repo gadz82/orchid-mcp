@@ -23,12 +23,12 @@ export default defineConfig({
                 "src/index.ts",
             ],
             thresholds: {
-                // Global ≥80% target (hard-rule #3) now that we've reached Phase 5.
+                // Global ≥80% target (hard-rule #3).
                 lines: 80,
                 statements: 80,
                 branches: 80,
                 functions: 80,
-                // Per-directory tighter targets from Phase 2.
+                // Per-directory tighter targets.
                 "src/http/**": {
                     lines: 90,
                     statements: 90,

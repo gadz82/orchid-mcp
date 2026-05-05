@@ -881,7 +881,7 @@ describe("UndiciOrchidAPIClient — getMcpServerAuthorizeUrl", () => {
     });
 });
 
-describe("UndiciOrchidAPIClient — exchangeAuthorizationCode (Phase 2)", () => {
+describe("UndiciOrchidAPIClient — exchangeAuthorizationCode", () => {
     it("POSTs JSON to /auth/exchange-code and parses the token response", async () => {
         let seen: { headers: Headers | null; body: string | null } = {
             headers: null,
@@ -977,7 +977,7 @@ describe("UndiciOrchidAPIClient — exchangeAuthorizationCode (Phase 2)", () => 
     });
 });
 
-describe("UndiciOrchidAPIClient — resolveIdentity (Phase 4)", () => {
+describe("UndiciOrchidAPIClient — resolveIdentity", () => {
     it("POSTs JSON to /auth/resolve-identity and returns the parsed identity", async () => {
         let seen: { body: string | null; authz: string | null } = {
             body: null,
@@ -1074,7 +1074,7 @@ describe("UndiciOrchidAPIClient — resolveIdentity (Phase 4)", () => {
     });
 });
 
-describe("UndiciOrchidAPIClient — refreshUpstreamToken (Phase 4)", () => {
+describe("UndiciOrchidAPIClient — refreshUpstreamToken", () => {
     it("POSTs JSON to /auth/refresh-token and parses the rotated token pair", async () => {
         let body: Record<string, unknown> | null = null;
         server.use(

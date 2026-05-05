@@ -1,7 +1,6 @@
 /**
- * Phase 1 smoke test: proves the vitest + tsx + ESM pipeline actually
- * executes source under ``src/``. Replaced by more specific tests in
- * later phases.
+ * Smoke test: proves the vitest + tsx + ESM pipeline actually
+ * executes source under ``src/``.
  */
 
 import { describe, expect, it } from "vitest";
@@ -39,7 +38,7 @@ describe("settings", () => {
         ).toThrow();
     });
 
-    it("accepts the Phase 3 oauth store http knobs", () => {
+    it("accepts the oauth store http knobs", () => {
         const settings = loadSettings({
             ORCHID_MCP_OAUTH_STORE_BACKEND: "http",
             ORCHID_MCP_GATEWAY_STATE_SERVICE_TOKEN: "sek-123",
@@ -54,8 +53,8 @@ describe("settings", () => {
         expect(settings.gatewayStateServiceToken).toBeUndefined();
     });
 
-    it("rejects retired Phase-1/4 env vars under strict mode", () => {
-        // Phase 5 retired the gateway-side direct-to-IdP fallbacks
+    it("rejects retired env vars under strict mode", () => {
+        // The gateway no longer supports direct-to-IdP fallbacks
         // and the via-api opt-out flags.  Operators with stale env
         // vars get a loud zod error rather than a silent no-op.
         for (const stale of [

@@ -2,8 +2,7 @@
  * HTTP-backed implementations of :type:`ClientStore`,
  * :type:`AuthCodeStore`, and :type:`GatewayTokenStore`.
  *
- * Phase 3 of the auth-centralisation roadmap.  The in-memory and
- * file-backed stores are single-replica by design; these wrappers
+ * The in-memory store is single-replica by design; these wrappers
  * delegate every mutation and lookup to orchid-api's
  * ``/mcp-gateway/state/*`` endpoints so two gateway replicas fronting
  * the same orchid-api share identical state.
@@ -128,8 +127,8 @@ export interface HttpStoreSet {
 
 /**
  * Build all three HTTP-backed stores against a single shared
- * :type:`GatewayStateClient`.  The only remaining multi-replica
- * persistence path after Phase 4 retired the file-backed stores.
+ * :type:`GatewayStateClient`.  The supported multi-replica
+ * persistence path.
  */
 export function buildHttpStoreSet(client: GatewayStateClient): HttpStoreSet {
     return {

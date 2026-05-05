@@ -1,6 +1,6 @@
 # orchid-mcp
 
-A Model Context Protocol (MCP) gateway that exposes the [Orchid](../orchid/) multi-agent framework to any MCP-capable AI client — **Claude Desktop, Claude Code, Cursor, MCP Inspector, or anything that speaks the MCP 2025-03-26 Streamable HTTP transport**.
+A Model Context Protocol (MCP) gateway that exposes the [Orchid](https://github.com/gadz82/orchid) multi-agent framework to any MCP-capable AI client — **Claude Desktop, Claude Code, Cursor, MCP Inspector, or anything that speaks the MCP 2025-03-26 Streamable HTTP transport**.
 
 The gateway is a **thin proxy**. The host LLM calls `orchid_ask(...)` and the gateway translates that into HTTP calls against the existing `orchid-api` FastAPI service. Orchid's supervisor, agents, RAG, and downstream MCP tools run upstream; session continuity, auth, multi-tenancy, and HITL are preserved.
 
@@ -204,7 +204,7 @@ All config is environment variables prefixed with `ORCHID_MCP_`. `src/settings.t
 | `ORCHID_MCP_OAUTH_GATEWAY_BASE_URL`        | —                   | Public URL the gateway is reachable at (goes into metadata)              |
 | `ORCHID_MCP_OAUTH_TOKEN_TTL_S`             | `3600`              | Lifetime of gateway-issued access tokens                                 |
 | `ORCHID_MCP_OAUTH_CLIENT_REGISTRATION_ENABLED` | `true`          | Whether `/register` (RFC 7591 DCR) is exposed                            |
-| `ORCHID_MCP_OAUTH_STORE_BACKEND`           | `memory`            | `memory` \| `http` — Phase 3 multi-replica state sharing                 |
+| `ORCHID_MCP_OAUTH_STORE_BACKEND`           | `memory`            | `memory` \| `http` — multi-replica state sharing                         |
 | `ORCHID_MCP_GATEWAY_STATE_SERVICE_TOKEN`   | —                   | Required when `OAUTH_STORE_BACKEND=http`; matches orchid-api's setting   |
 
 **Strict-mode rejections** — the following env vars now fail parsing (operators with stale `.env` files get a loud error rather than a silent no-op): `ORCHID_MCP_OAUTH_TOKEN_ENDPOINT`, `ORCHID_MCP_OAUTH_USERINFO_ENDPOINT`, `ORCHID_MCP_OAUTH_CLIENT_SECRET`, `ORCHID_MCP_OAUTH_USERINFO_SUB_PATH`, `ORCHID_MCP_OAUTH_USERINFO_EMAIL_PATH`, `ORCHID_MCP_OAUTH_EXCHANGE_VIA_API`, `ORCHID_MCP_OAUTH_RESOLVE_VIA_API`, `ORCHID_MCP_OAUTH_REFRESH_VIA_API`, `ORCHID_MCP_OAUTH_IDENTITY_RESOLVER_MODULE`. All of these concerns moved to `orchid-api`.
@@ -320,5 +320,5 @@ For multi-replica installs, also enable Redis-backed sessions (`SESSION_MAP_BACK
 ## See also
 
 - [AGENTS.md](./AGENTS.md) — architecture rules, SOLID seams, package structure
-- [orchid-api/](../orchid-api/) — the FastAPI service this gateway proxies to
-- [orchid/](../orchid/) — the Python framework library
+- [orchid-api](https://github.com/gadz82/orchid-api) — the FastAPI service this gateway proxies to
+- [orchid](https://github.com/gadz82/orchid) — the Python framework library

@@ -60,8 +60,7 @@ async function buildAuthStrategy(
                 "ORCHID_MCP_OAUTH_AUTHORIZATION_ENDPOINT, " +
                 "ORCHID_MCP_OAUTH_CLIENT_ID, and ORCHID_MCP_OAUTH_GATEWAY_BASE_URL " +
                 "to be set.  ``token_endpoint`` and ``userinfo_endpoint`` are no " +
-                "longer needed on the gateway side — both are owned by orchid-api " +
-                "(Phase 5 of the auth-centralisation roadmap).",
+                "longer needed on the gateway side — both are owned by orchid-api.",
         );
     }
 
@@ -71,13 +70,13 @@ async function buildAuthStrategy(
     //     restart.
     //   - ``http`` — delegates to orchid-api's
     //     ``/mcp-gateway/state/*`` endpoints so multiple gateway
-    //     replicas share one source of truth (Phase 3).
+    //     replicas share one source of truth.
     //
-    // The ``file`` backend was retired in Phase 4 — operators who
-    // need cross-restart persistence should point the gateway at
-    // orchid-api's ``http`` backend (same durability guarantee, no
-    // local disk footprint).  Setting ``ORCHID_MCP_OAUTH_STORE_BACKEND=file``
-    // now surfaces as a settings validation error at load time.
+    // Operators who need cross-restart persistence should point the
+    // gateway at orchid-api's ``http`` backend (same durability
+    // guarantee, no local disk footprint).  Setting
+    // ``ORCHID_MCP_OAUTH_STORE_BACKEND=file`` now surfaces as a
+    // settings validation error at load time.
     const resolvedBackend: "memory" | "http" = settings.oauthStoreBackend ?? "memory";
 
     let clientStore: ClientStore;
@@ -112,7 +111,7 @@ async function buildAuthStrategy(
         tokenStore = new MemoryGatewayTokenStore({ ttlSeconds: oauthTokenTtlS });
     }
 
-    // Phase 5 — every upstream call is centralised on orchid-api.
+    // Every upstream call is centralised on orchid-api.
     // The gateway holds no ``client_secret``, no userinfo URL, no
     // JSON-path hints; it simply forwards the upstream access /
     // refresh tokens to orchid-api and uses whatever the server

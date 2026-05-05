@@ -110,7 +110,7 @@ describe("mergeDiscoveredOAuthSettings", () => {
     });
 
     it("ignores ``token_endpoint`` / ``userinfo_endpoint`` / via-api flags from discovery", () => {
-        // Phase 5 retired the gateway's direct-to-IdP code paths;
+        // The gateway no longer holds direct-to-IdP code paths;
         // these fields stay on the wire schema for downstream
         // consumers (orchid-frontend) but the gateway must not
         // attempt to consume them — the merge has nowhere to put

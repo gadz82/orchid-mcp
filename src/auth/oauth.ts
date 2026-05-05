@@ -69,13 +69,13 @@ import { OrchidUnauthorizedError } from "../errors.js";
 
 /** Upstream IdP configuration.
  *
- * Phase 5 minimum: ``issuer`` + ``authorizationEndpoint`` + ``clientId``
- * + ``scopes`` are needed to build the ``/authorize`` redirect URL the
+ * Minimum: ``issuer`` + ``authorizationEndpoint`` + ``clientId`` +
+ * ``scopes`` are needed to build the ``/authorize`` redirect URL the
  * gateway sends users to; ``authDomain`` is an optional hint passed
  * downstream.  Everything else (``tokenEndpoint``, ``userinfoEndpoint``,
- * ``clientSecret``, JSON-path hints) was retired when Phases 2–4
- * centralised the secret-bearing exchange + identity resolution +
- * refresh on the orchid-api side.
+ * ``clientSecret``, JSON-path hints) lives on orchid-api, which
+ * centralises the secret-bearing exchange + identity resolution +
+ * refresh.
  */
 export interface UpstreamIdPConfig {
     issuer: string;
@@ -95,13 +95,9 @@ export interface UpstreamIdPConfig {
 /**
  * Delegate for the upstream ``grant_type=authorization_code`` exchange.
  *
- * Default implementation POSTs to ``idp.tokenEndpoint`` with
- * ``client_id`` + ``client_secret`` + PKCE verifier — the Phase 1
- * behaviour where the gateway holds ``client_secret`` itself.
- *
- * Phase 2 operators inject an alternative that delegates to
- * orchid-api's ``POST /auth/exchange-code``, moving the secret off
- * the gateway entirely.  Injection wiring lives in :mod:`src/index.ts`.
+ * Operators inject an implementation that delegates to orchid-api's
+ * ``POST /auth/exchange-code``, keeping the secret off the gateway
+ * entirely.  Injection wiring lives in :mod:`src/index.ts`.
  */
 export type UpstreamExchangeDelegate = (params: {
     code: string;
@@ -153,21 +149,20 @@ export interface MCPOAuthStrategyOptions {
     fetchImpl?: typeof fetch;
     /**
      * Performs the upstream ``grant_type=authorization_code``
-     * exchange.  Phase 2 onwards this delegates to orchid-api's
-     * ``/auth/exchange-code`` endpoint — the gateway no longer
-     * holds ``client_secret``.
+     * exchange.  Delegates to orchid-api's ``/auth/exchange-code``
+     * endpoint — the gateway never holds ``client_secret``.
      */
     exchangeUpstreamCode: UpstreamExchangeDelegate;
     /**
      * Resolves an upstream access token into an
-     * :type:`OrchidIdentity`.  Phase 4 onwards this delegates to
-     * orchid-api's ``/auth/resolve-identity`` — the gateway no
-     * longer needs ``userinfo_endpoint`` / JSON-path config.
+     * :type:`OrchidIdentity`.  Delegates to orchid-api's
+     * ``/auth/resolve-identity`` — the gateway never needs
+     * ``userinfo_endpoint`` / JSON-path config.
      */
     resolveIdentity: UpstreamIdentityDelegate;
     /**
      * Optional delegate that performs the upstream refresh-token
-     * exchange on behalf of the gateway (Phase 4).  When set,
+     * exchange on behalf of the gateway.  When set,
      * ``tokenRefresh`` swaps the stored upstream tokens on every
      * gateway refresh instead of reusing the stale pair.  Left
      * optional because some IdPs don't issue refresh tokens at all
@@ -416,8 +411,8 @@ export class MCPOAuthStrategy implements AuthStrategy {
         }
 
         // Exchange upstream code for IdP tokens via orchid-api's
-        // ``/auth/exchange-code`` (Phase 2).  The gateway never
-        // holds ``client_secret``.
+        // ``/auth/exchange-code``.  The gateway never holds
+        // ``client_secret``.
         let tokens: IdPTokens;
         try {
             tokens = await this.opts.exchangeUpstreamCode({
@@ -438,10 +433,9 @@ export class MCPOAuthStrategy implements AuthStrategy {
         }
 
         // Resolve identity via orchid-api's ``/auth/resolve-identity``
-        // (Phase 4) — the same :class:`OrchidIdentityResolver` that
-        // validates every authenticated MCP request runs the call,
-        // so no userinfo URL or JSON-path config lives on the
-        // gateway.
+        // — the same :class:`OrchidIdentityResolver` that validates
+        // every authenticated MCP request runs the call, so no
+        // userinfo URL or JSON-path config lives on the gateway.
         let identity: OrchidIdentity;
         try {
             identity = await this.opts.resolveIdentity(tokens.access_token);

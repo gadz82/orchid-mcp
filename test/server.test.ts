@@ -490,7 +490,7 @@ describe("Streamable HTTP server — session-fixation guard", () => {
 // Claude Desktop) can discover the AS via RFC 9728 and run the
 // auth dance.  A gateway that silently accepts unauthenticated
 // ``initialize`` calls strands the client in ``auth=unknown``
-// state — real regression seen in the field during Phase 1.
+// state — real regression seen in the field.
 describe("Streamable HTTP server — OAuth-mode auth enforcement", () => {
     /** Auth strategy that always reports the client as unauthenticated. */
     class UnauthenticatedStrategy implements AuthStrategy {

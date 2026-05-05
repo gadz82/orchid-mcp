@@ -98,15 +98,15 @@ export async function handleRefreshTokenGrant(
         return;
     }
 
-    // Phase 4: when a refresh delegate is wired AND we actually have a
-    // stored upstream refresh token to swap, kick off the upstream
-    // refresh before minting the new gateway pair. The fresh upstream
-    // access token lands in ``identity.bearer`` (gateway → orchid-api
-    // will use it on the very next MCP request), and the new upstream
-    // refresh token replaces the stored one (OAuth 2.1 rotation). When
-    // either condition is unmet, we fall back to the pre-Phase-4
-    // behaviour of rotating only the gateway pair — acceptable when
-    // the upstream token is still within its TTL.
+    // When a refresh delegate is wired AND we actually have a stored
+    // upstream refresh token to swap, kick off the upstream refresh
+    // before minting the new gateway pair. The fresh upstream access
+    // token lands in ``identity.bearer`` (gateway → orchid-api will
+    // use it on the very next MCP request), and the new upstream
+    // refresh token replaces the stored one (OAuth 2.1 rotation).
+    // When either condition is unmet, we fall back to rotating only
+    // the gateway pair — acceptable when the upstream token is still
+    // within its TTL.
     let identity: OrchidIdentity = existing.identity;
     let idpTokens: IdPTokenCarry = {
         ...(existing.idpAccessToken !== undefined

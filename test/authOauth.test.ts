@@ -88,7 +88,7 @@ function baseOptions(): MCPOAuthStrategyOptions {
         clientStore: new MemoryClientStore(),
         authCodeStore: new MemoryAuthCodeStore(),
         tokenStore: new MemoryGatewayTokenStore(),
-        // Phase 5 — both delegates are required.  The defaults below
+        // Both delegates are required.  The defaults below
         // hit the :class:`FakeIdP` directly so tests that don't care
         // about the delegate plumbing exercise the full flow without
         // each having to wire its own fakes.  Tests that explicitly
@@ -497,7 +497,7 @@ describe("platform authDomain override", () => {
     });
 });
 
-/* ── Phase 2 — exchangeUpstreamCode delegation ────────────── */
+/* ── exchangeUpstreamCode delegation ────────────── */
 
 describe("upstream-code exchange delegation", () => {
     it("uses the injected delegate instead of calling tokenEndpoint directly", async () => {
@@ -527,7 +527,7 @@ describe("upstream-code exchange delegation", () => {
         await startGatewayOAuthServer(() => ({
             ...baseOptions(),
             exchangeUpstreamCode: delegate,
-            // Scrub the client secret — Phase 2 deployments don't
+            // Scrub the client secret — modern deployments don't
             // carry it on the gateway side.  The strategy must still
             // complete OAuth without it.
             idp: {
@@ -598,7 +598,7 @@ describe("upstream-code exchange delegation", () => {
     });
 });
 
-/* ── Identity-resolution delegation (Phase 4) ───────────────── */
+/* ── Identity-resolution delegation ───────────────── */
 
 describe("identity-resolver delegation", () => {
     it("uses the injected delegate instead of fetchUserinfo + scripted resolver", async () => {
@@ -687,13 +687,13 @@ describe("identity-resolver delegation", () => {
     });
 });
 
-/* ── Upstream-refresh delegation (Phase 4) ──────────────────── */
+/* ── Upstream-refresh delegation ──────────────────── */
 
 describe("upstream-refresh delegation", () => {
     it("swaps upstream tokens on gateway refresh when delegate + idpRefreshToken are present", async () => {
         // Seed a gateway token record with an upstream refresh
-        // token — mimics what ``tokenAuthorizationCode`` would
-        // produce in Phase 4.  Then drive a
+        // token — mimics what ``tokenAuthorizationCode`` produces.
+        // Then drive a
         // ``grant_type=refresh_token`` against the gateway and
         // assert the delegate was called with the stored idp
         // refresh token and the new gateway record carries the
@@ -852,16 +852,16 @@ describe("upstream-refresh delegation", () => {
     });
 });
 
-/* ── Non-OIDC userinfo coverage retired in Phase 5 ──────────────
+/* ── Non-OIDC userinfo coverage moved to orchid-api ──────────────
  *
  * The gateway no longer parses upstream userinfo responses — that
- * concern moved to orchid-api in Phase 4 (see ``test_auth_identity``
- * in ``orchid-api`` for the JSON-path extraction tests).  The
- * non-OIDC test that used to live here was deleted with the
- * fetchUserinfo/extractAtPath/coerceClaim helpers.
+ * concern lives on orchid-api (see ``test_auth_identity`` in
+ * ``orchid-api`` for the JSON-path extraction tests).  The non-OIDC
+ * test that used to live here was deleted with the fetchUserinfo /
+ * extractAtPath / coerceClaim helpers.
  */
 
-describe("phase-5 hygiene", () => {
+describe("upstream-secret-free hygiene", () => {
     it("UpstreamIdPConfig has no upstream-secret-or-userinfo fields", () => {
         // Regression guard: a maintainer adding ``tokenEndpoint`` /
         // ``userinfoEndpoint`` / ``clientSecret`` / ``userinfoSubPath``

@@ -13,9 +13,8 @@ export const SettingsSchema = z
          *   public ``client_id`` come from orchid-api's
          *   ``GET /auth-info`` so the operator configures OAuth once
          *   in ``orchid.yml`` instead of duplicating env vars here.
-         *   The gateway still holds its own ``client_secret`` in
-         *   ``ORCHID_MCP_OAUTH_CLIENT_SECRET`` (Phase 1 boundary —
-         *   Phase 2 moves the secret to orchid-api).
+         *   The gateway holds no upstream OAuth secrets — code
+         *   exchange and refresh both delegate to orchid-api.
          */
         authMode: z
             .enum(["service_account", "oauth", "discover"])
@@ -24,13 +23,10 @@ export const SettingsSchema = z
         serviceAccountAuthDomain: z.string().optional(),
 
         // Upstream OIDC IdP — minimum needed to build the
-        // ``/authorize`` redirect URL.  Phase 5 retired the
-        // gateway-side ``token_endpoint`` / ``userinfo_endpoint`` /
-        // ``client_secret`` / JSON-path-hint config: the gateway
-        // delegates exchange + identity + refresh to orchid-api on
-        // every flow, so the only upstream knowledge it needs is
-        // where to send users for the browser-based authorization
-        // dance.
+        // ``/authorize`` redirect URL.  The gateway delegates
+        // exchange + identity + refresh to orchid-api on every flow,
+        // so the only upstream knowledge it needs is where to send
+        // users for the browser-based authorization dance.
         oauthIssuerUrl: z.string().url().optional(),
         oauthAuthorizationEndpoint: z.string().url().optional(),
         oauthClientId: z.string().optional(),
@@ -62,15 +58,14 @@ export const SettingsSchema = z
          *   unit tests and single-replica personal deploys; state
          *   evaporates on restart.
          * - ``http`` — delegates to orchid-api's
-         *   ``/mcp-gateway/state/*`` endpoints (Phase 3).  Lets
-         *   multiple gateway replicas share the same registrations,
-         *   codes, and tokens via the orchid-api DB.  Requires
+         *   ``/mcp-gateway/state/*`` endpoints.  Lets multiple
+         *   gateway replicas share the same registrations, codes,
+         *   and tokens via the orchid-api DB.  Requires
          *   ``gatewayStateServiceToken`` to match the orchid-api
          *   ``MCP_GATEWAY_STATE_SERVICE_TOKEN`` setting.
          *
-         * The ``file`` backend from the initial Phase 3 draft was
-         * retired in Phase 4 — cross-restart persistence is now the
-         * ``http`` backend's job (same durability, no local disk).
+         * Cross-restart persistence is the ``http`` backend's job
+         * (durability via the orchid-api DB, no local disk).
          * ``undefined`` resolves to ``memory``.
          */
         oauthStoreBackend: z.enum(["memory", "http"]).optional(),
@@ -112,7 +107,7 @@ export const SettingsSchema = z
         circuitBreakerResetMs: z.coerce.number().int().positive().default(30_000),
         circuitBreakerRollingWindowMs: z.coerce.number().int().positive().default(10_000),
 
-        // Streaming (Phase 9) — opt-in; falls back to non-streaming sendMessage
+        // Streaming — opt-in; falls back to non-streaming sendMessage
         // whenever the MCP client doesn't supply a progressToken.
         streamingEnabled: z.coerce.boolean().default(false),
         /** Minimum ms between progress notifications (coalesces token bursts). */

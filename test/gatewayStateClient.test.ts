@@ -385,9 +385,10 @@ describe("HttpGatewayTokenStore", () => {
             identity: { bearer: "ups-bearer", subject: "u-42" },
             scopes: ["mcp.read"],
             expires_at: 1_700_000_000 + 3600,
-            // Phase 4 fields — defaults when the caller doesn't set
-            // the optional idpAccessToken/idpRefreshToken/idpExpiresAt
-            // properties on the record.
+            // Upstream-token fields — defaults when the caller
+            // doesn't set the optional idpAccessToken /
+            // idpRefreshToken / idpExpiresAt properties on the
+            // record.
             idp_access_token: "",
             idp_refresh_token: "",
             idp_expires_at: 0,

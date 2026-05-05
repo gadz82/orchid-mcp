@@ -113,10 +113,9 @@ export function mergeDiscoveredOAuthSettings(
     // ``exchange_via_api`` / ``resolve_via_api`` /
     // ``refresh_via_api`` are still part of the
     // :type:`AuthInfoOAuth` schema for downstream consumers (e.g.
-    // ``orchid-frontend``) but the gateway no longer reads them —
-    // Phase 5 retired the legacy direct-to-IdP code paths, so the
-    // gateway's behaviour is "always centralise" regardless of
-    // what the flags say.
+    // ``orchid-frontend``) but the gateway no longer reads them — the
+    // gateway's behaviour is "always centralise" regardless of what
+    // the flags say.
 
     // Scopes: env-var wins even over a discovered value, but the
     // settings default (``"openid profile email"``) shouldn't beat a

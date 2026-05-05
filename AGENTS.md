@@ -22,8 +22,8 @@ orchid-mcp/
       serviceAccount.ts         Static bearer strategy + 0.0.0.0 deployment guard
       oauth.ts                  MCPOAuthStrategy (MCP 2025-03-26 AS role) + IdPTokens type
       stores.ts                 ClientStore / AuthCodeStore / GatewayTokenStore + memory impls
-      gatewayStateClient.ts     HTTP client for orchid-api /mcp-gateway/state/* (Phase 3)
-      httpStores.ts             Phase-3 ClientStore/AuthCodeStore/TokenStore over HTTP
+      gatewayStateClient.ts     HTTP client for orchid-api /mcp-gateway/state/*
+      httpStores.ts             ClientStore/AuthCodeStore/TokenStore over HTTP
       upstreamDiscovery.ts      ``discover`` mode — pulls /auth-info from orchid-api
       upstreamPosture.ts        Startup probe — fails fast on auth-mode mismatch
     sessions/
@@ -33,7 +33,7 @@ orchid-mcp/
       orchidClient.ts           OrchidAPIClient interface + zod schemas (response shapes)
       undiciOrchidClient.ts     Concrete impl backed by Node fetch
       circuitBreaker.ts         Per-method opossum wrapper around OrchidAPIClient
-      sseParser.ts              Phase-9 streaming SSE frame parser
+      sseParser.ts              Streaming SSE frame parser
     tools/
       registry.ts               Registers the six tools
       _shared.ts                buildRequestContext / buildCallOptions / errorToResult /
@@ -52,12 +52,12 @@ orchid-mcp/
     _helpers/
       fakeIdP.ts                In-process OIDC IdP for OAuth tests
     askOrchid.test.ts           orchid_ask unit tests
-    authOauth.test.ts           MCPOAuthStrategy + full OAuth flow + Phase-4 delegate tests
+    authOauth.test.ts           MCPOAuthStrategy + full OAuth flow + delegate tests
     authServiceAccount.test.ts  Service-account strategy + deployment guard
     chatMgmt.test.ts            new/list/switch chat tools
     circuitBreaker.test.ts      Circuit breaker wrapper
     correlation.test.ts         Request-scoped correlation context
-    gatewayStateClient.test.ts  Phase-3 HTTP-store + GatewayStateClient (msw)
+    gatewayStateClient.test.ts  HTTP-store + GatewayStateClient (msw)
     importBoundaries.test.ts    Static HTTP-only boundary guard
     integration.test.ts         Opt-in testcontainers integration (RUN_INTEGRATION=1)
     mcpGatewayApply.test.ts     Per-session config application
@@ -69,7 +69,7 @@ orchid-mcp/
     sessionMap.test.ts          MemorySessionMap + TTL
     smoke.test.ts               Settings parsing + MCP spec pin + retired-env-var guards
     sseParser.test.ts           SSE frame parsing
-    streaming.test.ts           Phase-9 progress-token streaming
+    streaming.test.ts           Progress-token streaming
     tracing.test.ts             OTEL span shape via InMemorySpanExporter
     upload.test.ts              orchid_upload_file
     upstreamDiscovery.test.ts   ``discover`` mode merge logic
@@ -118,7 +118,7 @@ Everything the gateway knows about an Orchid chat comes from an HTTP call. The g
 All config lives in environment variables prefixed with `ORCHID_MCP_`. `settings.ts` is the single source of truth; anything else is a bug. The full matrix is in `README.md`. High-level sections:
 
 - **Core** — upstream URL, timeout, host/port, log level, session backend + TTL.
-- **Auth** — `AUTH_MODE` switches between `service_account` (shared bearer), `oauth` (per-user OAuth AS role with explicit endpoint env vars), and `discover` (per-user OAuth AS role with endpoints fetched from `orchid-api`'s `/auth-info`). The gateway holds **no upstream secrets**: code exchange, identity resolution, and refresh-token rotation all delegate to `orchid-api` (Phases 1–5 of the auth-centralisation roadmap — see [.knowledge/auth-centralisation.md](../.knowledge/auth-centralisation.md)).
+- **Auth** — `AUTH_MODE` switches between `service_account` (shared bearer), `oauth` (per-user OAuth AS role with explicit endpoint env vars), and `discover` (per-user OAuth AS role with endpoints fetched from `orchid-api`'s `/auth-info`). The gateway holds **no upstream secrets**: code exchange, identity resolution, and refresh-token rotation all delegate to `orchid-api`.
 - **Gateway state** — `OAUTH_STORE_BACKEND=memory|http`. The `http` backend persists DCR clients + auth codes + tokens via `orchid-api`'s `/mcp-gateway/state/*` endpoints so multiple gateway replicas share state. Requires `GATEWAY_STATE_SERVICE_TOKEN` to match `orchid-api`'s `MCP_GATEWAY_STATE_SERVICE_TOKEN`.
 - **Hardening** — rate limiter (rpm + burst), circuit breaker (error threshold + reset + window).
 - **Observability** — tracing gate + OTLP endpoint + service name.
@@ -182,5 +182,5 @@ log.  A session always comes up.  See ``src/server.ts`` →
 - **Session map TTL matters.** The default is 7 days; anything shorter and a user's "which chat was I in" state evaporates mid-conversation.
 - **The rate limiter keys on `mcpSessionId`, not OAuth subject.** One user across multiple Claude Desktop installs gets a separate bucket per session — by design, to avoid punishing everyone when one client goes wild. Layered OAuth-subject rate limiting can live on top.
 - **Do not edit `orchid/` or `orchid-api/` as a side effect of gateway work.** If an upstream change is genuinely required, STOP and flag it — those are separate packages under the monorepo rules.
-- **The gateway holds no upstream OAuth secrets.** After Phases 2–5, `client_secret` / `token_endpoint` / `userinfo_endpoint` / JSON-path hints all live on `orchid-api`. If you find yourself adding any of them back to `UpstreamIdPConfig` or `Settings`, you're undoing Phase 5 — there's an `authOauth.test.ts > phase-5 hygiene` regression guard for this.
+- **The gateway holds no upstream OAuth secrets.** `client_secret` / `token_endpoint` / `userinfo_endpoint` / JSON-path hints all live on `orchid-api`. If you find yourself adding any of them back to `UpstreamIdPConfig` or `Settings`, you're regressing — there's an `authOauth.test.ts` hygiene regression guard for this.
 - **Tool handlers MUST go through `runWithTooling`.** Skipping it breaks correlation ids, spans, and the rate-limiter — a silent failure mode.

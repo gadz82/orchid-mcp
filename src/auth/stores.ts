@@ -140,14 +140,13 @@ export interface GatewayTokenRecord {
     expiresAt: number;
     scopes: string[];
     /**
-     * Phase 4 — upstream IdP tokens carried alongside the
-     * gateway-minted pair so the ``/token?grant_type=refresh_token``
-     * handler can swap the upstream refresh for a fresh upstream
-     * access token before minting a new gateway pair.  Without
-     * these, a gateway refresh produces new gateway tokens still
-     * wrapping a stale upstream bearer — orchid-api then rejects
-     * the next request with 401 and the user has to re-authenticate
-     * from scratch.
+     * Upstream IdP tokens carried alongside the gateway-minted pair
+     * so the ``/token?grant_type=refresh_token`` handler can swap
+     * the upstream refresh for a fresh upstream access token before
+     * minting a new gateway pair.  Without these, a gateway refresh
+     * produces new gateway tokens still wrapping a stale upstream
+     * bearer — orchid-api then rejects the next request with 401
+     * and the user has to re-authenticate from scratch.
      *
      * Absence (``undefined`` on any field) means "upstream didn't
      * issue one" (some IdPs simply don't mint refresh tokens for

@@ -87,7 +87,7 @@ export const UploadResponseSchema = z.object({
 });
 export type UploadResponse = z.infer<typeof UploadResponseSchema>;
 
-/* ── Streaming (Phase 9) ─────────────────────────────────────── */
+/* ── Streaming ─────────────────────────────────────── */
 
 /**
  * SSE event shapes emitted by ``orchid-api``'s
@@ -182,9 +182,8 @@ export type GatewayConfig = z.infer<typeof GatewayConfigSchema>;
  *
  * Contains **only non-secret** values — endpoints, public client_id,
  * advertised scopes.  Never includes ``client_secret`` or any
- * user-scoped tokens; the secret lives on the server that runs the
- * actual token exchange (today that's orchid-mcp itself; Phase 2
- * moves the secret to orchid-api).
+ * user-scoped tokens; the secret lives on orchid-api, which runs
+ * the actual token exchange.
  */
 export const AuthInfoOAuthSchema = z.object({
     issuer_url: z.string().url(),
@@ -217,9 +216,9 @@ export const AuthInfoOAuthSchema = z.object({
      * When ``true``, orchid-api exposes a server-side
      * ``POST /auth/exchange-code`` endpoint and the gateway should
      * POST the upstream authorization code there rather than calling
-     * the upstream ``token_endpoint`` directly.  Phase 2 of the
-     * auth-centralisation roadmap — the gateway becomes a public
-     * PKCE-only client and drops its copy of ``client_secret``.
+     * the upstream ``token_endpoint`` directly.  The gateway becomes
+     * a public PKCE-only client and drops its copy of
+     * ``client_secret``.
      */
     exchange_via_api: z.boolean().optional().default(false),
     /**
@@ -229,16 +228,16 @@ export const AuthInfoOAuthSchema = z.object({
      * ``/oauth/callback`` and delegates identity resolution to
      * orchid-api — which runs the same
      * :class:`OrchidIdentityResolver` that validates every
-     * authenticated MCP request.  Phase 4 of the auth-centralisation
-     * roadmap — drops the last piece of upstream-specific config
-     * (userinfo URL + JSON-path hints) from the gateway.
+     * authenticated MCP request.  Drops the last piece of
+     * upstream-specific config (userinfo URL + JSON-path hints) from
+     * the gateway.
      */
     resolve_via_api: z.boolean().optional().default(false),
     /**
      * When ``true``, orchid-api exposes ``POST /auth/refresh-token``
      * and the gateway POSTs upstream refresh tokens there instead
      * of hitting the upstream ``token_endpoint`` with
-     * ``grant_type=refresh_token`` directly.  Phase 4 complement to
+     * ``grant_type=refresh_token`` directly.  Complement to
      * :attr:`exchange_via_api` — when both are enabled, the gateway
      * never holds ``client_secret``.
      */
@@ -336,9 +335,9 @@ export type McpServerAuthorize = z.infer<typeof McpServerAuthorizeSchema>;
 /**
  * All upstream orchid-api calls the gateway makes, as a narrow interface.
  *
- * Implementations are swappable (real undici-backed client in Phase 2,
- * fake in-memory client in tests). Tool handlers depend on this
- * interface, never on the concrete class.
+ * Implementations are swappable (real undici-backed client in
+ * production, fake in-memory client in tests). Tool handlers depend
+ * on this interface, never on the concrete class.
  */
 /**
  * Lifecycle hook every concrete client must support — split out so
@@ -412,13 +411,13 @@ export interface OrchidAuthClient {
      * Proxy an upstream-OAuth ``grant_type=authorization_code``
      * exchange through orchid-api's ``POST /auth/exchange-code``.
      *
-     * Phase 2: the gateway doesn't hold ``client_secret`` any more;
-     * orchid-api does.  The gateway posts ``{code, redirect_uri,
-     * code_verifier}`` and gets back the same token shape the upstream
-     * ``token_endpoint`` would have returned.  When discovery
-     * advertises ``exchange_via_api=false``, the gateway falls back to
-     * calling the upstream directly with its own secret copy —
-     * preserves Phase 1 behaviour for operators who haven't migrated.
+     * The gateway doesn't hold ``client_secret``; orchid-api does.
+     * The gateway posts ``{code, redirect_uri, code_verifier}`` and
+     * gets back the same token shape the upstream ``token_endpoint``
+     * would have returned.  When discovery advertises
+     * ``exchange_via_api=false``, the gateway falls back to calling
+     * the upstream directly with its own secret copy — for operators
+     * who haven't migrated.
      */
     exchangeAuthorizationCode(
         opts: CallOptions,
@@ -428,18 +427,17 @@ export interface OrchidAuthClient {
      * Resolve an upstream access token into an identity payload via
      * orchid-api's ``/auth/resolve-identity`` — unauthenticated on
      * the server side (the token itself is the proof of identity).
-     * Used by the Phase-4 :class:`ApiDelegatingResolver` so the
-     * gateway no longer needs its own ``userinfo_endpoint`` +
-     * JSON-path configuration.
+     * Used by :class:`ApiDelegatingResolver` so the gateway no longer
+     * needs its own ``userinfo_endpoint`` + JSON-path configuration.
      */
     resolveIdentity(params: ResolveIdentityParams): Promise<ResolveIdentityResponse>;
     /**
      * Refresh an upstream access token via orchid-api's
      * ``POST /auth/refresh-token``.  Shares the response shape with
      * :meth:`exchangeAuthorizationCode` — RFC 6749 §5.1 normalises
-     * the code and refresh grant responses.  Phase 4 complement:
-     * when ``refresh_via_api=true`` in discovery, the gateway
-     * drops its copy of ``client_secret`` entirely.
+     * the code and refresh grant responses.  Complement to the
+     * code-grant proxy: when ``refresh_via_api=true`` in discovery,
+     * the gateway drops its copy of ``client_secret`` entirely.
      */
     refreshUpstreamToken(
         opts: CallOptions,

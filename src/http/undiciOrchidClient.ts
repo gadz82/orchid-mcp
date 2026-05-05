@@ -2,9 +2,9 @@
  * Concrete :class:`OrchidAPIClient` backed by Node 20's **global**
  * ``fetch`` (which is ``undici`` bundled inside Node itself).
  *
- * Historical note: Phase 7 tried to use ``undici@7`` with a custom
- * :class:`undici.Agent` dispatcher for connection pooling + finer
- * ``headersTimeout`` / ``bodyTimeout``.  That produced a subtle
+ * Historical note: an earlier iteration tried to use ``undici@7`` with
+ * a custom :class:`undici.Agent` dispatcher for connection pooling +
+ * finer ``headersTimeout`` / ``bodyTimeout``.  That produced a subtle
  * incompatibility — ``new FormData()`` returns Node's bundled undici-6
  * ``FormData`` class, but the ``undici@7`` installed via npm shipped a
  * different ``FormData`` and refused to serialise the Node instance

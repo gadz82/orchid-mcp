@@ -1,11 +1,11 @@
 /**
  * HTTP client for orchid-api's ``/mcp-gateway/state/*`` endpoints.
  *
- * Phase 3 of the auth-centralisation roadmap.  In earlier phases the
- * gateway kept its DCR client registrations, in-flight auth codes, and
- * issued access / refresh tokens in process memory or in local JSON
- * files.  Both strategies are single-replica by construction — two
- * gateway replicas behind a load balancer can't see each other's state.
+ * Without this client the gateway would keep its DCR client
+ * registrations, in-flight auth codes, and issued access / refresh
+ * tokens in process memory or in local JSON files.  Both strategies
+ * are single-replica by construction — two gateway replicas behind a
+ * load balancer can't see each other's state.
  *
  * This module talks to a central orchid-api store (shared DB with
  * chat + outbound MCP tokens) so multi-replica gateway deployments
@@ -87,9 +87,9 @@ export const WireGatewayTokenSchema = z.object({
     identity: z.record(z.unknown()),
     scopes: z.array(z.string()),
     expires_at: z.number(),
-    // Phase 4 upstream-token fields — defaults keep the zod parse
-    // green when pointed at a pre-Phase-4 orchid-api instance that
-    // omits the fields entirely.
+    // Upstream-token fields — defaults keep the zod parse green when
+    // pointed at an older orchid-api instance that omits the fields
+    // entirely.
     idp_access_token: z.string().default(""),
     idp_refresh_token: z.string().default(""),
     idp_expires_at: z.number().default(0),

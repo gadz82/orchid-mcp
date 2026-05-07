@@ -33,27 +33,35 @@ import { getRequestId } from "../observability/correlation.js";
 
 import {
     AuthInfoSchema,
+    BloomRunListResponseSchema,
+    BloomRunSchema,
     ChatSessionSchema,
     GatewayConfigSchema,
     McpServerAuthorizeSchema,
     MessageSchema,
     ResolveIdentityResponseSchema,
     SendResultSchema,
+    SignalEmitResponseSchema,
     StreamEventSchema,
     UploadResponseSchema,
     UpstreamTokenResponseSchema,
     type AuthInfo,
+    type BloomRun,
+    type BloomRunListResponse,
     type CallOptions,
     type ChatMessage,
     type ChatSession,
+    type EmitSignalParams,
     type ExchangeAuthorizationCodeParams,
     type FileAttachment,
     type GatewayConfig,
+    type ListRunsFilter,
     type McpServerAuthorize,
     type OrchidAPIClient,
     type RefreshUpstreamTokenParams,
     type ResolveIdentityParams,
     type ResolveIdentityResponse,
+    type SignalEmitResponse,
     type UpstreamTokenResponse,
     type SendResult,
     type StreamDoneEvent,
@@ -74,6 +82,11 @@ interface RequestSpec {
     path: string;
     body?: string | FormData;
     contentType?: string;
+    /** Per-request headers that aren't covered by the standard
+     * Authorization / Accept / Content-Type / X-Request-ID set —
+     * e.g. the events ingestion ``X-Orchid-Source`` and
+     * ``Idempotency-Key`` headers. */
+    extraHeaders?: Record<string, string>;
 }
 
 export class UndiciOrchidAPIClient implements OrchidAPIClient {
@@ -377,6 +390,87 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
         return this.parse(AuthInfoSchema, json);
     }
 
+    /* ── Pollen + Bloom events surface ───────────────────────── */
+
+    async emitSignal(
+        opts: CallOptions,
+        params: EmitSignalParams,
+    ): Promise<SignalEmitResponse> {
+        // ``POST /signals`` is mounted by the HTTPIngestionProducer
+        // upstream; the producer expects ``X-Orchid-Source`` plus
+        // whatever validator the source registry has configured (HMAC
+        // / Bearer / mTLS).  The gateway passes the caller's bearer
+        // through ``opts``; for HMAC sources the integrator runs a
+        // custom validator that checks the body signature instead.
+        const bodyObj: Record<string, unknown> = {
+            type: params.type,
+            tenant_key: params.tenantKey,
+        };
+        if (params.payload !== undefined) bodyObj.payload = params.payload;
+        if (params.source !== undefined) bodyObj.source = params.source;
+        if (params.userId !== undefined) bodyObj.user_id = params.userId;
+        if (params.correlationId !== undefined) bodyObj.correlation_id = params.correlationId;
+        if (params.dedupeKey !== undefined) bodyObj.dedupe_key = params.dedupeKey;
+        if (params.identityClaim !== undefined) bodyObj.identity_claim = params.identityClaim;
+        if (params.chatBinding !== undefined) bodyObj.chat_binding = params.chatBinding;
+
+        const sourceId = params.sourceId ?? "mcp-gateway";
+        const raw = await this.perform(opts, {
+            method: "POST",
+            path: "/signals",
+            body: JSON.stringify(bodyObj),
+            contentType: "application/json",
+            extraHeaders: {
+                "X-Orchid-Source": sourceId,
+                ...(params.dedupeKey !== undefined
+                    ? { "Idempotency-Key": params.dedupeKey }
+                    : {}),
+            },
+        });
+        return this.parse(SignalEmitResponseSchema, raw);
+    }
+
+    async getRun(opts: CallOptions, runId: string): Promise<BloomRun> {
+        const raw = await this.perform(opts, {
+            method: "GET",
+            path: `/runs/${encodeURIComponent(runId)}`,
+        });
+        return this.parse(BloomRunSchema, raw);
+    }
+
+    async listRuns(
+        opts: CallOptions,
+        filter: ListRunsFilter,
+    ): Promise<BloomRunListResponse> {
+        const params = new URLSearchParams();
+        if (filter.triggerId !== undefined) params.set("trigger_id", filter.triggerId);
+        if (filter.status !== undefined) params.set("status", filter.status);
+        if (filter.since !== undefined) params.set("since", filter.since);
+        if (filter.limit !== undefined) params.set("limit", String(filter.limit));
+        const qs = params.toString();
+        const raw = await this.perform(opts, {
+            method: "GET",
+            path: qs ? `/runs?${qs}` : "/runs",
+        });
+        return this.parse(BloomRunListResponseSchema, raw);
+    }
+
+    async listRunsForSignal(
+        opts: CallOptions,
+        signalId: string,
+    ): Promise<BloomRunListResponse> {
+        // orchid-api's ``GET /signals/{id}`` returns the signal but
+        // not its runs; the gateway resolves runs by listing the
+        // recent window and filtering by signal_id client-side.
+        // Upstream may eventually expose ``/signals/{id}/runs``; the
+        // method signature above is intentionally narrow so the
+        // gateway can swap to a dedicated endpoint without touching
+        // tool handlers.
+        const all = await this.listRuns(opts, { limit: 200 });
+        const items = all.items.filter((r) => r.signal_id === signalId);
+        return { items };
+    }
+
     async close(): Promise<void> {
         // No-op — global fetch has no per-instance resources to release.
     }
@@ -398,6 +492,11 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
             headers["Content-Type"] = req.contentType;
         }
         // For FormData bodies the Content-Type (with boundary) is set by fetch.
+        if (req.extraHeaders !== undefined) {
+            for (const [k, v] of Object.entries(req.extraHeaders)) {
+                headers[k] = v;
+            }
+        }
 
         let response: Response;
         try {

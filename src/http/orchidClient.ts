@@ -330,6 +330,88 @@ export const McpServerAuthorizeSchema = z.object({
 });
 export type McpServerAuthorize = z.infer<typeof McpServerAuthorizeSchema>;
 
+/* ── Pollen + Bloom events surface (orchid-api §16) ──────────── */
+
+/**
+ * Mirror of orchid-api's signal-ingestion response.
+ * See ``orchid_ai/events/producers/http.py``'s
+ * :class:`HTTPIngestionProducer`.
+ */
+export const SignalEmitResponseSchema = z.object({
+    signal_id: z.string().min(1),
+    deduplicated: z.boolean(),
+});
+export type SignalEmitResponse = z.infer<typeof SignalEmitResponseSchema>;
+
+/**
+ * Mirror of a single ``GET /runs/{id}`` row from
+ * ``orchid-api/orchid_api/routers/runs.py``.  The §26 visibility
+ * filter lives upstream — the gateway never re-filters.
+ */
+export const BloomRunSchema = z.object({
+    run_id: z.string().min(1),
+    trigger_id: z.string(),
+    signal_id: z.string(),
+    agent_name: z.string(),
+    attempt_number: z.number().int(),
+    status: z.string(),
+    visibility: z.string(),
+    visibility_user_id: z.string().nullable().optional(),
+    queued_at: z.string(),
+    started_at: z.string().nullable().optional(),
+    finished_at: z.string().nullable().optional(),
+    error: z.string().nullable().optional(),
+    result: z.unknown().nullable().optional(),
+    next_retry_at: z.string().nullable().optional(),
+});
+export type BloomRun = z.infer<typeof BloomRunSchema>;
+
+export const BloomRunListResponseSchema = z.object({
+    items: z.array(BloomRunSchema).default([]),
+});
+export type BloomRunListResponse = z.infer<typeof BloomRunListResponseSchema>;
+
+/**
+ * Inputs for ``POST /signals`` via the
+ * :class:`HTTPIngestionProducer`.  ``payload`` is opaque; the only
+ * structural requirement is that it serialises as JSON.
+ *
+ * ``sourceId`` flows onto the ``X-Orchid-Source`` header.  The
+ * default ``"mcp-gateway"`` MUST be registered upstream in
+ * ``events.ingestion.sources`` (with a validator the gateway can
+ * satisfy — typically :class:`BearerValidator` against the
+ * gateway's own service-account token).
+ */
+export interface EmitSignalParams {
+    type: string;
+    tenantKey: string;
+    payload?: Record<string, unknown>;
+    source?: string;
+    userId?: string;
+    correlationId?: string;
+    dedupeKey?: string;
+    identityClaim?: Record<string, unknown>;
+    chatBinding?: Record<string, unknown>;
+    /** Source id mapped onto ``X-Orchid-Source`` (default ``"mcp-gateway"``). */
+    sourceId?: string;
+}
+
+/**
+ * Filters for ``GET /runs`` (visibility-filtered upstream).
+ *
+ * ``triggerId`` and ``status`` are passed as query params; ``since``
+ * is an ISO8601 timestamp.  The gateway intentionally does not
+ * accept the relative ``"15m"``-style values the CLI uses — host
+ * LLMs build queries from absolute timestamps that the orchestrator
+ * agent computed deterministically.
+ */
+export interface ListRunsFilter {
+    triggerId?: string;
+    status?: string;
+    since?: string;
+    limit?: number;
+}
+
 /* ── Client contract ─────────────────────────────────────────── */
 
 /**
@@ -458,6 +540,22 @@ export interface OrchidGatewayConfigClient {
 }
 
 /**
+ * Pollen + Bloom events surface — emit / inspect signals + runs.
+ *
+ * Tool handlers depend on this narrow slice so they can be tested
+ * with an in-memory fake without standing up the full chat / auth
+ * client.  The §26 visibility filter lives upstream; the gateway
+ * passes the caller's bearer through and trusts orchid-api's
+ * response.
+ */
+export interface OrchidEventsClient {
+    emitSignal(opts: CallOptions, params: EmitSignalParams): Promise<SignalEmitResponse>;
+    getRun(opts: CallOptions, runId: string): Promise<BloomRun>;
+    listRuns(opts: CallOptions, filter: ListRunsFilter): Promise<BloomRunListResponse>;
+    listRunsForSignal(opts: CallOptions, signalId: string): Promise<BloomRunListResponse>;
+}
+
+/**
  * Combined client surface implemented by the concrete HTTP clients
  * (:class:`UndiciOrchidAPIClient`, :class:`CircuitBreakerOrchidAPIClient`,
  * any future fake in-memory client in tests). Tool handlers that only
@@ -468,5 +566,6 @@ export interface OrchidGatewayConfigClient {
 export interface OrchidAPIClient
     extends OrchidChatClient,
         OrchidAuthClient,
+        OrchidEventsClient,
         OrchidGatewayConfigClient,
         OrchidClientLifecycle {}

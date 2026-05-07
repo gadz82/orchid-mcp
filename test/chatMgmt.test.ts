@@ -20,6 +20,8 @@ import { NoopRateLimiter } from "../src/rateLimit.js";
 import { MemorySessionMap } from "../src/sessions/memory.js";
 import { runListChats, runNewChat, runSwitchChat } from "../src/tools/chatMgmt.js";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 class StubAuthStrategy implements AuthStrategy {
     readonly mode = "service_account" as const;
     identity: OrchidIdentity = { bearer: "tok", subject: SHARED_SUBJECT };
@@ -131,6 +133,10 @@ class StubClient implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 function makeCtx() {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 import type { AuthStrategy, MCPRequestContext, OrchidIdentity } from "../src/auth/base.js";
 import { SHARED_SUBJECT } from "../src/auth/serviceAccount.js";
 import type { AppContext } from "../src/context.js";
@@ -130,6 +132,10 @@ class StubClient implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 function makeCtx() {

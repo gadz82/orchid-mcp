@@ -15,6 +15,8 @@ import type {
 } from "../src/http/orchidClient.js";
 import { createLogger } from "../src/observability/logger.js";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 class FlappyInner implements OrchidAPIClient {
     shouldFail = true;
     listChatsCalls = 0;
@@ -104,6 +106,10 @@ class FlappyInner implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 const opts: CallOptions = { bearer: "tok" };
@@ -243,6 +249,31 @@ describe("CircuitBreakerOrchidAPIClient", () => {
             async refreshUpstreamToken() {
                 calls.push("refreshUpstreamToken");
                 return { access_token: "at-refreshed", token_type: "Bearer" };
+            },
+            async emitSignal() {
+                calls.push("emitSignal");
+                return { signal_id: "s-1", deduplicated: false };
+            },
+            async getRun() {
+                calls.push("getRun");
+                return {
+                    run_id: "r-1",
+                    trigger_id: "t",
+                    signal_id: "s",
+                    agent_name: "a",
+                    attempt_number: 1,
+                    status: "succeeded",
+                    visibility: "tenant",
+                    queued_at: "now",
+                };
+            },
+            async listRuns() {
+                calls.push("listRuns");
+                return { items: [] };
+            },
+            async listRunsForSignal() {
+                calls.push("listRunsForSignal");
+                return { items: [] };
             },
             async close() {
                 calls.push("close");

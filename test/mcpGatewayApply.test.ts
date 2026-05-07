@@ -33,6 +33,8 @@ import { NoopRateLimiter } from "../src/rateLimit.js";
 import { buildServer, type BuiltServer } from "../src/server.js";
 import { MemorySessionMap } from "../src/sessions/memory.js";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 class StubAuth implements AuthStrategy {
     readonly mode = "service_account" as const;
     async resolve(_ctx: MCPRequestContext): Promise<OrchidIdentity> {
@@ -117,6 +119,10 @@ class StubClient implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 async function startGateway(stub: StubClient): Promise<{
@@ -205,9 +211,12 @@ describe("MCP gateway config — applied at session init", () => {
         const names = tools.tools.map((t) => t.name).sort();
         expect(names).toEqual([
             "orchid_ask",
+            "orchid_bloom_list",
+            "orchid_bloom_status",
             "orchid_list_chats",
             "orchid_new_chat",
             "orchid_resume_chat",
+            "orchid_signal_emit",
             "orchid_switch_chat",
             "orchid_upload_file",
         ]);

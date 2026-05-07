@@ -19,18 +19,23 @@ import { OrchidGatewayError } from "../errors.js";
 import type { Logger } from "../observability/logger.js";
 import type {
     AuthInfo,
+    BloomRun,
+    BloomRunListResponse,
     CallOptions,
     ChatMessage,
     ChatSession,
+    EmitSignalParams,
     ExchangeAuthorizationCodeParams,
     FileAttachment,
     GatewayConfig,
+    ListRunsFilter,
     McpServerAuthorize,
     OrchidAPIClient,
     RefreshUpstreamTokenParams,
     ResolveIdentityParams,
     ResolveIdentityResponse,
     SendResult,
+    SignalEmitResponse,
     StreamDoneEvent,
     StreamHandlers,
     UploadResponse,
@@ -79,6 +84,9 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
     private readonly _sendMessage: OrchidAPIClient["sendMessage"];
     private readonly _resume: OrchidAPIClient["resume"];
     private readonly _upload: OrchidAPIClient["upload"];
+    private readonly _emitSignal: OrchidAPIClient["emitSignal"];
+    private readonly _getRun: OrchidAPIClient["getRun"];
+    private readonly _listRuns: OrchidAPIClient["listRuns"];
 
     constructor(deps: Deps) {
         this.inner = deps.inner;
@@ -103,6 +111,13 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
         this._sendMessage = this.wrap("sendMessage", this.inner.sendMessage.bind(this.inner));
         this._resume = this.wrap("resume", this.inner.resume.bind(this.inner));
         this._upload = this.wrap("upload", this.inner.upload.bind(this.inner));
+        // Pollen + Bloom events methods get their own breakers — same
+        // failure-isolation rationale as ``createChat`` vs.
+        // ``sendMessage``: an upstream events outage shouldn't trip
+        // the breaker for chat tools (and vice versa).
+        this._emitSignal = this.wrap("emitSignal", this.inner.emitSignal.bind(this.inner));
+        this._getRun = this.wrap("getRun", this.inner.getRun.bind(this.inner));
+        this._listRuns = this.wrap("listRuns", this.inner.listRuns.bind(this.inner));
     }
 
     /**
@@ -245,6 +260,27 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
         params: RefreshUpstreamTokenParams,
     ): Promise<UpstreamTokenResponse> {
         return this.inner.refreshUpstreamToken(opts, params);
+    }
+    /* ── Pollen + Bloom events ───────────────────────────────── */
+    emitSignal(opts: CallOptions, params: EmitSignalParams): Promise<SignalEmitResponse> {
+        return this._emitSignal(opts, params);
+    }
+    getRun(opts: CallOptions, runId: string): Promise<BloomRun> {
+        return this._getRun(opts, runId);
+    }
+    listRuns(opts: CallOptions, filter: ListRunsFilter): Promise<BloomRunListResponse> {
+        return this._listRuns(opts, filter);
+    }
+    /**
+     * Bypasses the breaker — composed of a single ``listRuns`` call
+     * that's already breaker-protected, plus a pure-function filter.
+     * Layering a second breaker would just double-count failures.
+     */
+    listRunsForSignal(
+        opts: CallOptions,
+        signalId: string,
+    ): Promise<BloomRunListResponse> {
+        return this.inner.listRunsForSignal(opts, signalId);
     }
     close(): Promise<void> {
         // Shut down every breaker so their internal timers don't keep the

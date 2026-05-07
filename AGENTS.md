@@ -35,13 +35,15 @@ orchid-mcp/
       circuitBreaker.ts         Per-method opossum wrapper around OrchidAPIClient
       sseParser.ts              Streaming SSE frame parser
     tools/
-      registry.ts               Registers the six tools
+      registry.ts               Registers the nine v1 tools
       _shared.ts                buildRequestContext / buildCallOptions / errorToResult /
                                 runWithTooling (correlation + span + rate-limit wrapper)
       askOrchid.ts              orchid_ask
       chatMgmt.ts               orchid_new_chat / orchid_list_chats / orchid_switch_chat
       upload.ts                 orchid_upload_file
       resume.ts                 orchid_resume_chat
+      eventsTools.ts            orchid_signal_emit / orchid_bloom_status / orchid_bloom_list
+                                — Pollen + Bloom tools (Phase 7)
     mcpGateway/
       applyConfig.ts            Per-session GET /mcp-gateway/config → tool/prompt overrides
     observability/
@@ -67,6 +69,7 @@ orchid-mcp/
     resume.test.ts              orchid_resume_chat
     server.test.ts              End-to-end via StreamableHTTPClientTransport
     sessionMap.test.ts          MemorySessionMap + TTL
+    eventsTools.test.ts         Phase-7 Pollen + Bloom tool tests (signal_emit / bloom_status / bloom_list)
     smoke.test.ts               Settings parsing + MCP spec pin + retired-env-var guards
     sseParser.test.ts           SSE frame parsing
     streaming.test.ts           Progress-token streaming

@@ -26,7 +26,9 @@ The gateway is intentionally **stateless about agent behaviour**. Routing, RAG r
 
 ## Tools
 
-The gateway registers six MCP tools on every session. Their YAML-side titles and descriptions can be overridden per-deployment via `mcp_gateway.tools.<name>` in `agents.yaml` (see [Customisation](#customisation)).
+The gateway registers nine MCP tools on every session — six chat-oriented + three for the Pollen + Bloom event subsystem upstream. Their YAML-side titles and descriptions can be overridden per-deployment via `mcp_gateway.tools.<name>` in `agents.yaml` (see [Customisation](#customisation)).
+
+### Chat tools
 
 | Tool                  | Default purpose                                                                            | Key params |
 | --------------------- | ------------------------------------------------------------------------------------------ | ----------|
@@ -36,6 +38,20 @@ The gateway registers six MCP tools on every session. Their YAML-side titles and
 | `orchid_switch_chat`  | Bind the current MCP session to a prior chat id.                                           | `chat_id: string` |
 | `orchid_upload_file`  | Upload a base64-encoded file into the current chat's RAG scope.                            | `name: string`, `content_b64: string` |
 | `orchid_resume_chat`  | Resume a HITL-paused chat with an approved/denied decision.                                | `chat_id: string`, `decision: "approve" \| "deny"`, optional `args: object` |
+
+### Pollen + Bloom event tools
+
+These three forward to the upstream events surface (`/signals`, `/runs`, `/jobs`). They register on every session — but if `events.enabled: false` upstream, the tools succeed at the MCP layer and surface upstream's 503 verbatim.
+
+| Tool                   | Default purpose                                                                                                                                                                                                                              | Key params |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------|
+| `orchid_signal_emit`   | Emit a Pollen signal that may trigger one or more background Bloom runs upstream. Returns immediately with the persisted `signal_id` (the supervisor doesn't wait for the Bloom — use `orchid_bloom_status` to track resulting runs).        | `type: string`, `tenant_key: string`, optional `payload`, `user_id`, `correlation_id`, `dedupe_key` |
+| `orchid_bloom_status`  | Look up a Bloom run's status (and `result`, when finished). Pass either `signal_id` (returns the latest run for that signal) or `run_id` (returns that run directly). Returns `not_found` when the caller's bearer can't see the resource — visibility (§26) is enforced upstream. | exactly one of `signal_id` or `run_id` |
+| `orchid_bloom_list`    | List recent Bloom runs visible to the caller, optionally filtered by `trigger_id` / `status` / `since`. The §26 visibility filter lives upstream — the gateway never re-filters. Use `orchid_bloom_status` for full detail.                  | optional `trigger_id`, `status`, `since`, `limit` (1..500) |
+
+**Naming.** *Pollen* = the signal substrate (one ingest call → one persisted signal envelope). *Bloom* = the execution layer (one signal can produce N runs across N triggers; each retry is a new `JobRun` row with `attempt_number + 1`).
+
+**Why not block the host LLM on the Bloom?** A Bloom can run for minutes, queue retries, and post its result into a chat that isn't the calling MCP session. The fire-and-poll pattern keeps the MCP tool call latency tight and matches the native Pollen + Bloom flow upstream.
 
 Plus optional pre-canned prompts the host LLM can fetch via the standard MCP `prompts/get` (configured under `mcp_gateway.prompts` in `agents.yaml`).
 
@@ -71,7 +87,7 @@ Then [point an MCP client at it](#install-in-an-mcp-client).
 }
 ```
 
-Restart Claude Desktop. The six `orchid_*` tools should appear under the attach-tool menu.
+Restart Claude Desktop. The nine `orchid_*` tools should appear under the attach-tool menu.
 
 ### Claude Code
 
@@ -247,6 +263,17 @@ mcp_gateway:
     orchid_upload_file:
       description: "Attach a menu PDF or supplier sheet to the current session."
 
+    # Pollen + Bloom event tools — re-title to match your domain
+    orchid_signal_emit:
+      title: "Trigger a background workflow"
+      description: "Emit a signal to start a deep-research Bloom run."
+    orchid_bloom_status:
+      title: "Check background work status"
+      description: "Look up the status of a long-running background analysis."
+    orchid_bloom_list:
+      title: "List recent background runs"
+      description: "Browse recent background analyses with optional status / trigger filters."
+
   prompts:
     - name: dietary_filter
       title: "Filter menu by dietary constraint"
@@ -316,6 +343,7 @@ For multi-replica installs, also enable Redis-backed sessions (`SESSION_MAP_BACK
 - **`No tools visible in Claude Desktop`** — confirm the URL in `claude_desktop_config.json` ends with `/mcp`, and restart the app (not just the window).
 - **OAuth `/register` returns `405`** — `ORCHID_MCP_OAUTH_CLIENT_REGISTRATION_ENABLED` was set to `false`. Either pre-register the client out-of-band or re-enable DCR.
 - **Multi-replica login loop** — `OAUTH_STORE_BACKEND` is still `memory`. Move to `http` and confirm `GATEWAY_STATE_SERVICE_TOKEN` matches between gateway and api.
+- **`orchid_signal_emit` / `orchid_bloom_status` / `orchid_bloom_list` return upstream 503** — `events.enabled: false` (or missing) in the upstream `agents.yaml`. The gateway registers these tools unconditionally; turn the events block on at orchid-api to make them functional.
 
 ## See also
 

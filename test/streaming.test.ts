@@ -21,6 +21,8 @@ import { MemorySessionMap } from "../src/sessions/memory.js";
 import { registerAskOrchidTool, runAskOrchid } from "../src/tools/askOrchid.js";
 import type { Settings } from "../src/settings.js";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 void registerAskOrchidTool;
 
 class StubAuthStrategy implements AuthStrategy {
@@ -133,6 +135,10 @@ class StreamingStubClient implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 function makeCtx(streamingEnabled: boolean) {

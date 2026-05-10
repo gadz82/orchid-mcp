@@ -26,6 +26,8 @@ import { NoopRateLimiter } from "../src/rateLimit.js";
 import { MemorySessionMap } from "../src/sessions/memory.js";
 import { runAskOrchid } from "../src/tools/askOrchid.js";
 
+import { eventsNoop } from "./_helpers/stubEvents.js";
+
 /* ── Fakes ───────────────────────────────────────────────────── */
 
 class FakeAuthStrategy implements AuthStrategy {
@@ -168,6 +170,10 @@ class FakeOrchidAPIClient implements OrchidAPIClient {
     async close(): Promise<void> {
         /* noop */
     }
+    emitSignal = eventsNoop().emitSignal;
+    getRun = eventsNoop().getRun;
+    listRuns = eventsNoop().listRuns;
+    listRunsForSignal = eventsNoop().listRunsForSignal;
 }
 
 /* ── Harness ─────────────────────────────────────────────────── */

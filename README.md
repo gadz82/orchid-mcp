@@ -350,3 +350,4 @@ For multi-replica installs, also enable Redis-backed sessions (`SESSION_MAP_BACK
 - [AGENTS.md](./AGENTS.md) — architecture rules, SOLID seams, package structure
 - [orchid-api](https://github.com/gadz82/orchid-api) — the FastAPI service this gateway proxies to
 - [orchid](https://github.com/gadz82/orchid) — the Python framework library
+- [orchid-examples](https://github.com/gadz82/orchid-examples) — example configurations, custom agents, and integration patterns

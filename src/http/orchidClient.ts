@@ -113,6 +113,7 @@ export const StreamDoneEventSchema = z.object({
     agents_used: z.array(z.string()).default([]),
     agent_results: z.record(z.string()).default({}),
     auth_required: z.array(z.string()).default([]),
+    error: z.boolean().default(false),
 });
 export const StreamErrorEventSchema = z.object({
     type: z.literal("error"),

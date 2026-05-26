@@ -204,6 +204,7 @@ describe("CircuitBreakerOrchidAPIClient", () => {
                     agents_used: [],
                     agent_results: {},
                     auth_required: [],
+                    error: false,
                 };
             },
             async resume() {

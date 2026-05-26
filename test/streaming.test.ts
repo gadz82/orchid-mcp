@@ -172,6 +172,7 @@ describe("orchid_ask — streaming path", () => {
                 agents_used: ["talker"],
                 agent_results: {},
                 auth_required: [],
+                error: false,
             },
         ];
         const sentNotifications: { method: string; params: Record<string, unknown> }[] = [];
@@ -226,6 +227,7 @@ describe("orchid_ask — streaming path", () => {
                 agents_used: [],
                 agent_results: {},
                 auth_required: [],
+                error: false,
             },
         ];
         const sent: unknown[] = [];
@@ -259,6 +261,7 @@ describe("orchid_ask — streaming path", () => {
                 agents_used: ["basketball"],
                 agent_results: {},
                 auth_required: [],
+                error: false,
             },
         ];
         const sent: { method: string; params: { message?: string } }[] = [];
@@ -348,6 +351,7 @@ describe("orchid_ask — streaming path", () => {
                 agents_used: [],
                 agent_results: {},
                 auth_required: ["github"],
+                error: false,
             },
         ];
         const extra = {
@@ -383,6 +387,7 @@ describe("orchid_ask — streaming path", () => {
                 agents_used: [],
                 agent_results: {},
                 auth_required: [],
+                error: false,
             },
         ];
         const extra = {

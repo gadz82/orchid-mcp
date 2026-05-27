@@ -26,6 +26,7 @@ import { OrchidUnauthorizedError } from "./errors.js";
 import type { GatewayConfig } from "./http/orchidClient.js";
 import { applyGatewayConfig } from "./mcpGateway/applyConfig.js";
 import { registerTools } from "./tools/registry.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 /**
  * MCP spec revision this gateway targets. Pin here so an SDK upgrade
@@ -164,7 +165,7 @@ export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
             };
 
             try {
-                await mcpServer.connect(transport);
+                await mcpServer.connect(transport as Transport);
                 await transport.handleRequest(req, res, body);
             } catch (err) {
                 logger.error({ err }, "failed to initialize mcp session");

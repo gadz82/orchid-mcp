@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/gadz82/orchid-mcp/compare/v1.2.2...v1.2.3) (2026-05-27)
+
+
+### Bug Fixes
+
+* improve npm publish logic and update semantic-release configuration ([a1d8bce](https://github.com/gadz82/orchid-mcp/commit/a1d8bce5066638686f3be0552ffe0fd37fe76027))
+
 ## [1.2.2](https://github.com/gadz82/orchid-mcp/compare/v1.2.1...v1.2.2) (2026-05-27)
 
 

@@ -43,19 +43,23 @@ jobs:
             - name: Test Coverage
               run: npm run test:coverage
 
-            - name: Obtain npm token via OIDC
-              id: npm-oidc
-              run: |
-                ID_TOKEN=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-                  "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | jq -r .value)
-                TOKEN=$(curl -sS -X POST \
-                  -H "Authorization: Bearer $ID_TOKEN" \
-                  "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@orchid-ai%2Forchid-mcp" | jq -r .token)
-                echo "NPM_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
-                echo "NODE_AUTH_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
-
             - name: Semantic Release
               run: npx semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  NPM_CONFIG_PROVENANCE: true
+
+            - name: Publish to npm
+              if: ${{ !contains(github.event.head_commit.message, 'chore(release)') }}
+              run: |
+                VERSION=$(node -p "require('./package.json').version")
+                if npm view "@orchid-ai/orchid-mcp@${VERSION}" version 2>/dev/null; then
+                  echo "Version ${VERSION} already published, skipping."
+                  exit 0
+                fi
+                ID_TOKEN=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                  "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | jq -r .value)
+                NPM_TOKEN=$(curl -sS -X POST \
+                  -H "Authorization: Bearer $ID_TOKEN" \
+                  "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@orchid-ai%2Forchid-mcp" | jq -r .token)
+                export NODE_AUTH_TOKEN="$NPM_TOKEN"
+                npm publish --provenance --access public

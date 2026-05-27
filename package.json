@@ -3,6 +3,10 @@
     "private": false,
     "version": "1.2.3",
     "description": "MCP gateway that exposes the Orchid multi-agent framework over Streamable HTTP.",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gadz82/orchid-mcp"
+    },
     "type": "module",
     "main": "./dist/index.js",
     "bin": {

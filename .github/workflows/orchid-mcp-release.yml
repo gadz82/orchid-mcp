@@ -23,6 +23,7 @@ jobs:
               uses: actions/setup-node@v5
               with:
                   node-version: "24"
+                  registry-url: "https://registry.npmjs.org"
 
             - name: Install dependencies
               run: npm ci
@@ -43,17 +44,18 @@ jobs:
               run: npm run test:coverage
 
             - name: Obtain npm token via OIDC
+              id: npm-oidc
               run: |
                 ID_TOKEN=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
                   "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | jq -r .value)
-                NPM_TOKEN=$(curl -sS -X POST \
+                TOKEN=$(curl -sS -X POST \
                   -H "Authorization: Bearer $ID_TOKEN" \
                   "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@orchid-ai%2Forchid-mcp" | jq -r .token)
-                echo "NPM_TOKEN=$NPM_TOKEN" >> "$GITHUB_ENV"
+                echo "NPM_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
+                echo "NODE_AUTH_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
 
             - name: Semantic Release
               run: npx semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  NPM_TOKEN: ${{ env.NPM_TOKEN }}
                   NPM_CONFIG_PROVENANCE: true

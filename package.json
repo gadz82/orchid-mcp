@@ -1,8 +1,8 @@
 {
-    "name": "orchid-mcp",
+    "name": "@orchid-ai/orchid-mcp",
+    "private": false,
     "version": "0.1.0-dev",
     "description": "MCP gateway that exposes the Orchid multi-agent framework over Streamable HTTP.",
-    "private": true,
     "type": "module",
     "main": "./dist/index.js",
     "bin": {

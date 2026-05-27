@@ -291,15 +291,42 @@ describe("CircuitBreakerOrchidAPIClient", () => {
         await breakerClient.listChats(opts);
         await breakerClient.getMessages(opts, "c", 10, 0);
         await breakerClient.sendMessage(opts, "c", "hi");
+        await breakerClient.sendMessageStream(opts, "c", "hi", undefined, {
+            onEvent: () => { /* ignore */ },
+        });
         await breakerClient.resume(opts, "c", true);
         await breakerClient.upload(opts, "c", [{ filename: "f", content: Buffer.from("x") }]);
+        await breakerClient.getGatewayConfig(opts);
+        await breakerClient.getAuthInfo();
+        await breakerClient.getMcpServerAuthorizeUrl(opts, "github");
+        await breakerClient.exchangeAuthorizationCode(opts, {
+            code: "c",
+            redirect_uri: "http://cb",
+        });
+        await breakerClient.resolveIdentity({ access_token: "tok" });
+        await breakerClient.refreshUpstreamToken(opts, { refresh_token: "rt" });
+        await breakerClient.emitSignal(opts, { type: "t", tenantKey: "tk" });
+        await breakerClient.getRun(opts, "r-1");
+        await breakerClient.listRuns(opts, {});
+        await breakerClient.listRunsForSignal(opts, "s-1");
         expect(calls).toEqual([
             "createChat",
             "listChats",
             "getMessages",
             "sendMessage",
+            "sendMessageStream",
             "resume",
             "upload",
+            "getGatewayConfig",
+            "getAuthInfo",
+            "getMcpServerAuthorizeUrl",
+            "exchangeAuthorizationCode",
+            "resolveIdentity",
+            "refreshUpstreamToken",
+            "emitSignal",
+            "getRun",
+            "listRuns",
+            "listRunsForSignal",
         ]);
     });
 

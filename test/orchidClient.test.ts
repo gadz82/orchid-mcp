@@ -554,6 +554,31 @@ describe("UndiciOrchidAPIClient — sendMessageStream", () => {
         ).rejects.toBeInstanceOf(OrchidServerError);
     });
 
+    it("throws OrchidResponseShapeError when the stream response body is null", async () => {
+        server.use(
+            http.post(`${BASE}/chats/:id/messages/stream`, () => {
+                return new Response(null, {
+                    status: 200,
+                    headers: { "Content-Type": "text/event-stream" },
+                });
+            }),
+        );
+        await expect(
+            client.sendMessageStream(bearerOpts, "chat-1", "hi", undefined, {
+                onEvent: () => { /* ignore */ },
+            }),
+        ).rejects.toBeInstanceOf(OrchidResponseShapeError);
+    });
+
+    it("maps a network error during streaming to OrchidGatewayError", async () => {
+        server.use(http.post(`${BASE}/chats/:id/messages/stream`, () => HttpResponse.error()));
+        await expect(
+            client.sendMessageStream(bearerOpts, "chat-1", "hi", undefined, {
+                onEvent: () => { /* ignore */ },
+            }),
+        ).rejects.toBeInstanceOf(OrchidGatewayError);
+    });
+
     it("maps an abort signal firing before the response to OrchidTimeoutError", async () => {
         server.use(
             http.post(`${BASE}/chats/:id/messages/stream`, async () => {
@@ -769,6 +794,26 @@ describe("UndiciOrchidAPIClient — getAuthInfo", () => {
             ),
         );
         await expect(client.getAuthInfo()).rejects.toBeInstanceOf(OrchidResponseShapeError);
+    });
+
+    it("maps a network error to OrchidGatewayError", async () => {
+        server.use(http.get(`${BASE}/auth-info`, () => HttpResponse.error()));
+        await expect(client.getAuthInfo()).rejects.toBeInstanceOf(OrchidGatewayError);
+    });
+
+    it("maps a timeout to OrchidTimeoutError", async () => {
+        const shortClient = new UndiciOrchidAPIClient({
+            baseUrl: BASE,
+            timeoutMs: 50,
+            fetchImpl: fetch,
+        });
+        server.use(
+            http.get(`${BASE}/auth-info`, async () => {
+                await delay(500);
+                return HttpResponse.json({ dev_bypass: true, identity_resolver_configured: false });
+            }),
+        );
+        await expect(shortClient.getAuthInfo()).rejects.toBeInstanceOf(OrchidTimeoutError);
     });
 });
 
@@ -1157,6 +1202,165 @@ describe("isTimeoutLike", () => {
         const err = new TypeError("fetch failed");
         Object.defineProperty(err, "cause", { value: "some string" });
         expect(isTimeoutLike(err)).toBe(false);
+    });
+});
+
+describe("UndiciOrchidAPIClient — emitSignal", () => {
+    it("POSTs JSON to /signals with X-Orchid-Source header and parses response", async () => {
+        let seen: { body: unknown; headers: Headers | null } = { body: null, headers: null };
+        server.use(
+            http.post(`${BASE}/signals`, async ({ request }) => {
+                seen = { body: await request.json(), headers: request.headers };
+                return HttpResponse.json({ signal_id: "s-1", deduplicated: false });
+            }),
+        );
+        const res = await client.emitSignal(bearerOpts, {
+            type: "order.placed",
+            tenantKey: "tk-1",
+            payload: { orderId: "o-1" },
+            userId: "u-1",
+        });
+        expect(res.signal_id).toBe("s-1");
+        expect(res.deduplicated).toBe(false);
+        expect(seen.body).toMatchObject({
+            type: "order.placed",
+            tenant_key: "tk-1",
+            payload: { orderId: "o-1" },
+            user_id: "u-1",
+        });
+        expect((seen.headers as unknown as Headers).get("x-orchid-source")).toBe("mcp-gateway");
+    });
+
+    it("sends optional fields and dedupeKey as Idempotency-Key header", async () => {
+        let capturedHeaders: Headers | null = null;
+        server.use(
+            http.post(`${BASE}/signals`, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return HttpResponse.json({ signal_id: "s-2", deduplicated: false });
+            }),
+        );
+        await client.emitSignal(bearerOpts, {
+            type: "t",
+            tenantKey: "tk",
+            source: "webhook",
+            correlationId: "corr-1",
+            dedupeKey: "dedupe-1",
+            identityClaim: { email: "a@b.c" },
+            chatBinding: { chat_id: "c-1" },
+            sourceId: "my-source",
+        });
+        const h = capturedHeaders as unknown as Headers;
+        expect(h.get("x-orchid-source")).toBe("my-source");
+        expect(h.get("idempotency-key")).toBe("dedupe-1");
+    });
+
+    it("maps 401 to OrchidUnauthorizedError", async () => {
+        server.use(
+            http.post(`${BASE}/signals`, () =>
+                HttpResponse.json({ detail: "nope" }, { status: 401 }),
+            ),
+        );
+        await expect(
+            client.emitSignal(bearerOpts, { type: "t", tenantKey: "tk" }),
+        ).rejects.toBeInstanceOf(OrchidUnauthorizedError);
+    });
+});
+
+describe("UndiciOrchidAPIClient — getRun / listRuns / listRunsForSignal", () => {
+    it("getRun returns a single run by id", async () => {
+        server.use(
+            http.get(`${BASE}/runs/:id`, () =>
+                HttpResponse.json({
+                    run_id: "r-1",
+                    trigger_id: "tr-1",
+                    signal_id: "s-1",
+                    agent_name: "basketball",
+                    attempt_number: 1,
+                    status: "succeeded",
+                    visibility: "tenant",
+                    queued_at: "2025-01-01T00:00:00Z",
+                }),
+            ),
+        );
+        const run = await client.getRun(bearerOpts, "r-1");
+        expect(run.run_id).toBe("r-1");
+        expect(run.agent_name).toBe("basketball");
+        expect(run.status).toBe("succeeded");
+    });
+
+    it("listRuns returns runs with optional filters", async () => {
+        let seenUrl: string | null = null;
+        server.use(
+            http.get(`${BASE}/runs`, ({ request }) => {
+                seenUrl = request.url;
+                return HttpResponse.json({ items: [] });
+            }),
+        );
+        const res = await client.listRuns(bearerOpts, {
+            triggerId: "tr-1",
+            status: "failed",
+            since: "2025-01-01T00:00:00Z",
+            limit: 50,
+        });
+        expect(res.items).toEqual([]);
+        const url = new URL(seenUrl as unknown as string);
+        expect(url.searchParams.get("trigger_id")).toBe("tr-1");
+        expect(url.searchParams.get("status")).toBe("failed");
+        expect(url.searchParams.get("since")).toBe("2025-01-01T00:00:00Z");
+        expect(url.searchParams.get("limit")).toBe("50");
+    });
+
+    it("listRuns sends no query params when filter is empty", async () => {
+        let seenUrl: string | null = null;
+        server.use(
+            http.get(`${BASE}/runs`, ({ request }) => {
+                seenUrl = request.url;
+                return HttpResponse.json({ items: [] });
+            }),
+        );
+        await client.listRuns(bearerOpts, {});
+        expect(seenUrl).toBe(`${BASE}/runs`);
+    });
+
+    it("listRunsForSignal filters runs by signal_id client-side", async () => {
+        server.use(
+            http.get(`${BASE}/runs`, () =>
+                HttpResponse.json({
+                    items: [
+                        {
+                            run_id: "r-1",
+                            trigger_id: "tr-1",
+                            signal_id: "s-1",
+                            agent_name: "a",
+                            attempt_number: 1,
+                            status: "succeeded",
+                            visibility: "tenant",
+                            queued_at: "t",
+                        },
+                        {
+                            run_id: "r-2",
+                            trigger_id: "tr-1",
+                            signal_id: "s-2",
+                            agent_name: "a",
+                            attempt_number: 1,
+                            status: "succeeded",
+                            visibility: "tenant",
+                            queued_at: "t",
+                        },
+                    ],
+                }),
+            ),
+        );
+        const res = await client.listRunsForSignal(bearerOpts, "s-1");
+        expect(res.items).toHaveLength(1);
+        expect(res.items[0]?.run_id).toBe("r-1");
+    });
+});
+
+describe("UndiciOrchidAPIClient — empty response body", () => {
+    it("handles a 2xx response with empty body (parsed = null)", async () => {
+        server.use(http.get(`${BASE}/chats`, () => new HttpResponse(null, { status: 200 })));
+        await expect(client.listChats(bearerOpts)).rejects.toBeInstanceOf(OrchidResponseShapeError);
     });
 });
 

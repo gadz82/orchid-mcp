@@ -1,35 +1,35 @@
 name: orchid-mcp PR
 
 on:
-  pull_request:
-    branches: [main]
+    pull_request:
+        branches: [main]
 
 jobs:
-  pr:
-    runs-on: ubuntu-latest
+    pr:
+        runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build
-        run: npm run build
+            - name: Build
+              run: npm run build
 
-      - name: Typecheck
-        run: npm run typecheck
+            - name: Typecheck
+              run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
+            - name: Lint
+              run: npm run lint
 
-      - name: Test
-        run: npm test
+            - name: Test
+              run: npm test
 
-      - name: Test Coverage
-        run: npm run test:coverage
+            - name: Test Coverage
+              run: npm run test:coverage

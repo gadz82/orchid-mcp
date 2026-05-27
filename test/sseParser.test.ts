@@ -78,4 +78,9 @@ describe("parseSSE", () => {
         const events = await collect(streamFromStrings(["data: incomplete\n"]));
         expect(events).toEqual([]);
     });
+
+    it("handles a field name without a colon separator (colonIdx === -1)", async () => {
+        const events = await collect(streamFromStrings(["data\n\n"]));
+        expect(events).toEqual([{ event: "message", data: "" }]);
+    });
 });

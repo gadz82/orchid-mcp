@@ -3,16 +3,10 @@ name: orchid-mcp PR
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "orchid-mcp/**"
-      - ".github/workflows/orchid-mcp-pr.yml"
 
 jobs:
   pr:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: orchid-mcp
 
     steps:
       - uses: actions/checkout@v4

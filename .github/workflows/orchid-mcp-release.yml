@@ -3,9 +3,6 @@ name: orchid-mcp Release
 on:
   push:
     branches: [main]
-    paths:
-      - "orchid-mcp/**"
-      - ".github/workflows/orchid-mcp-release.yml"
 
 permissions:
   contents: write
@@ -13,9 +10,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: orchid-mcp
 
     steps:
       - uses: actions/checkout@v4

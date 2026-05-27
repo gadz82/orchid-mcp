@@ -153,7 +153,7 @@ MCP 2025-03-26 OAuth 2.0 authorization-server role with PKCE-only Dynamic Client
 5. Mints opaque gateway-issued access tokens keyed to the resolved `OrchidIdentity` (`{bearer, subject, authDomain?}`).
 6. The `MCPOAuthStrategy` verifies incoming MCP bearer tokens against its token store on every tool invocation.
 
-`discover` (recommended) fetches the upstream issuer + authorize URL + public `client_id` from `orchid-api`'s `GET /auth-info` at startup. `oauth` lets you set those values explicitly via env vars (rare — useful only when `orchid-api` doesn't expose `OrchidAuthConfigProvider`).
+`discover` (recommended) fetches the upstream issuer + authorize URL + public `client_id` from `orchid-api`'s `GET /auth-info` at startup. `oauth` lets you set those values explicitly via env vars (rare, useful only when `orchid-api` doesn't expose `OrchidAuthConfigProvider`).
 
 ```env
 ORCHID_MCP_AUTH_MODE=discover

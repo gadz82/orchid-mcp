@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/gadz82/orchid-mcp/compare/v1.1.0...v1.2.0) (2026-05-27)
+
+
+### Features
+
+* enable npm provenance and adjust workflow permissions in release setup ([8f65727](https://github.com/gadz82/orchid-mcp/commit/8f657274cb5311da6fab6c2de99b7cf8a93b47a6))
+
 # [1.1.0](https://github.com/gadz82/orchid-mcp/compare/v1.0.0...v1.1.0) (2026-05-27)
 
 

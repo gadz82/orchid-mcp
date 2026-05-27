@@ -8,6 +8,7 @@ permissions:
     contents: write
     issues: write
     id-token: write
+    packages: write
 
 jobs:
     release:
@@ -45,3 +46,4 @@ jobs:
               run: npx semantic-release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_CONFIG_PROVENANCE: true

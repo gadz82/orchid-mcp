@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/gadz82/orchid-mcp/compare/v1.2.0...v1.2.1) (2026-05-27)
+
+
+### Bug Fixes
+
+* integrate npm OIDC token authentication and simplify semantic-release config ([371ae29](https://github.com/gadz82/orchid-mcp/commit/371ae293d6e8e48901f39df15a712ca5894db88c))
+
 # [1.2.0](https://github.com/gadz82/orchid-mcp/compare/v1.1.0...v1.2.0) (2026-05-27)
 
 

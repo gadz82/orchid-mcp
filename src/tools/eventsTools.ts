@@ -154,9 +154,7 @@ export const bloomStatusInputShape = {
         .string()
         .min(1)
         .optional()
-        .describe(
-            "Specific run id to inspect.  Mutually exclusive with signal_id.",
-        ),
+        .describe("Specific run id to inspect.  Mutually exclusive with signal_id."),
 } as const;
 
 type BloomStatusInput = z.infer<z.ZodObject<typeof bloomStatusInputShape>>;
@@ -187,13 +185,8 @@ async function bloomStatusImpl(
     reqCtx: MCPRequestContext,
     args: BloomStatusInput,
 ): Promise<CallToolResult> {
-    if (
-        (args.signal_id === undefined) ===
-        (args.run_id === undefined)
-    ) {
-        return isErrorResult(
-            "Pass exactly one of signal_id or run_id.",
-        );
+    if ((args.signal_id === undefined) === (args.run_id === undefined)) {
+        return isErrorResult("Pass exactly one of signal_id or run_id.");
     }
     try {
         const identity = await ctx.authStrategy.resolve(reqCtx);
@@ -313,9 +306,10 @@ async function bloomListImpl(
         if (args.limit !== undefined) filter.limit = args.limit;
 
         const list = await ctx.httpClient.listRuns(callOpts, filter);
-        const summary = list.items.length === 0
-            ? "No Bloom runs match the filter."
-            : list.items.map(renderRunOneLine).join("\n");
+        const summary =
+            list.items.length === 0
+                ? "No Bloom runs match the filter."
+                : list.items.map(renderRunOneLine).join("\n");
 
         return {
             content: [{ type: "text", text: summary }],
@@ -338,7 +332,10 @@ function renderRunSummary(run: BloomRun): string {
         `  status:         ${run.status}`,
         `  agent:          ${run.agent_name}`,
         `  attempt:        ${String(run.attempt_number)}`,
-        `  visibility:     ${run.visibility}` + (run.visibility_user_id !== undefined && run.visibility_user_id !== null ? ` (user ${run.visibility_user_id})` : ""),
+        `  visibility:     ${run.visibility}` +
+            (run.visibility_user_id !== undefined && run.visibility_user_id !== null
+                ? ` (user ${run.visibility_user_id})`
+                : ""),
         `  queued_at:      ${run.queued_at}`,
     ];
     if (run.started_at !== undefined && run.started_at !== null) {
@@ -351,9 +348,15 @@ function renderRunSummary(run: BloomRun): string {
         lines.push(`  error:          ${run.error}`);
     }
     if (run.result !== undefined && run.result !== null) {
-        const json = typeof run.result === "string" ? run.result : JSON.stringify(run.result, null, 2);
+        const json =
+            typeof run.result === "string" ? run.result : JSON.stringify(run.result, null, 2);
         lines.push("  result:");
-        lines.push(json.split("\n").map((l) => `    ${l}`).join("\n"));
+        lines.push(
+            json
+                .split("\n")
+                .map((l) => `    ${l}`)
+                .join("\n"),
+        );
     }
     return lines.join("\n");
 }

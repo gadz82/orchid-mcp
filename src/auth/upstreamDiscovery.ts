@@ -66,10 +66,7 @@ export async function fetchAuthInfoWithRetries(
         } catch (err) {
             lastErr = err;
             if (attempt === maxAttempts) break;
-            logger.warn(
-                { err, attempt, maxAttempts },
-                "failed to fetch /auth-info — retrying",
-            );
+            logger.warn({ err, attempt, maxAttempts }, "failed to fetch /auth-info — retrying");
             await sleep(delayMs);
         }
     }
@@ -93,10 +90,7 @@ export async function fetchAuthInfoWithRetries(
  * ``client_secret`` is NEVER sourced from discovery — it's strictly an
  * env-var-owned secret on the gateway side in this phase.
  */
-export function mergeDiscoveredOAuthSettings(
-    settings: Settings,
-    oauth: AuthInfoOAuth,
-): Settings {
+export function mergeDiscoveredOAuthSettings(settings: Settings, oauth: AuthInfoOAuth): Settings {
     const merged: Settings = {
         ...settings,
         oauthIssuerUrl: settings.oauthIssuerUrl ?? oauth.issuer_url,
@@ -122,8 +116,7 @@ export function mergeDiscoveredOAuthSettings(
     // real upstream scope.  We treat the settings default as "not
     // customised" and let discovery override it.  Callers explicitly
     // setting ``ORCHID_MCP_OAUTH_SCOPES`` to anything else win.
-    const scopesFromSettingsLookLikeDefault =
-        settings.oauthScopes === "openid profile email";
+    const scopesFromSettingsLookLikeDefault = settings.oauthScopes === "openid profile email";
     if (scopesFromSettingsLookLikeDefault && oauth.scope.length > 0) {
         merged.oauthScopes = oauth.scope;
     }

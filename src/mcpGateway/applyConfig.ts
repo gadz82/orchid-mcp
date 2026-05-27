@@ -45,11 +45,7 @@ export function applyGatewayConfig(
             continue;
         }
         const updates: { title?: string; description?: string } = {};
-        if (
-            override.title !== undefined &&
-            override.title !== null &&
-            override.title.length > 0
-        ) {
+        if (override.title !== undefined && override.title !== null && override.title.length > 0) {
             updates.title = override.title;
         }
         if (

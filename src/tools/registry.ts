@@ -27,10 +27,7 @@ import {
 import { registerResumeChatTool } from "./resume.js";
 import { registerUploadFileTool } from "./upload.js";
 
-export function registerTools(
-    server: McpServer,
-    ctx: AppContext,
-): Map<string, ToolUpdateHandle> {
+export function registerTools(server: McpServer, ctx: AppContext): Map<string, ToolUpdateHandle> {
     const handles = new Map<string, RegisteredTool>();
     handles.set("orchid_ask", registerAskOrchidTool(server, ctx));
     const chatMgmt = registerChatMgmtTools(server, ctx);

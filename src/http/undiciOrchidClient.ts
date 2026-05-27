@@ -231,9 +231,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
             throw new OrchidGatewayError(`Upstream streaming error: ${errorMessageText}`);
         }
         if (doneEvent === null) {
-            throw new OrchidResponseShapeError(
-                "Upstream streaming ended without a 'done' event",
-            );
+            throw new OrchidResponseShapeError("Upstream streaming ended without a 'done' event");
         }
         return doneEvent;
     }
@@ -332,9 +330,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
         return this.parse(UpstreamTokenResponseSchema, raw);
     }
 
-    async resolveIdentity(
-        params: ResolveIdentityParams,
-    ): Promise<ResolveIdentityResponse> {
+    async resolveIdentity(params: ResolveIdentityParams): Promise<ResolveIdentityResponse> {
         // Unauthenticated on the server side — same posture as
         // ``/auth/exchange-code``.  We still route through the
         // standard ``perform()`` path for tracing + correlation +
@@ -370,13 +366,9 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
             });
         } catch (err) {
             if (isTimeoutLike(err)) {
-                throw new OrchidTimeoutError(
-                    `Upstream timed out fetching ${url}`,
-                );
+                throw new OrchidTimeoutError(`Upstream timed out fetching ${url}`);
             }
-            throw new OrchidGatewayError(
-                `Upstream GET /auth-info failed: ${errorMessage(err)}`,
-            );
+            throw new OrchidGatewayError(`Upstream GET /auth-info failed: ${errorMessage(err)}`);
         }
         if (!response.ok) {
             const body = await response.text().catch(() => "");
@@ -392,10 +384,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
 
     /* ── Pollen + Bloom events surface ───────────────────────── */
 
-    async emitSignal(
-        opts: CallOptions,
-        params: EmitSignalParams,
-    ): Promise<SignalEmitResponse> {
+    async emitSignal(opts: CallOptions, params: EmitSignalParams): Promise<SignalEmitResponse> {
         // ``POST /signals`` is mounted by the HTTPIngestionProducer
         // upstream; the producer expects ``X-Orchid-Source`` plus
         // whatever validator the source registry has configured (HMAC
@@ -422,9 +411,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
             contentType: "application/json",
             extraHeaders: {
                 "X-Orchid-Source": sourceId,
-                ...(params.dedupeKey !== undefined
-                    ? { "Idempotency-Key": params.dedupeKey }
-                    : {}),
+                ...(params.dedupeKey !== undefined ? { "Idempotency-Key": params.dedupeKey } : {}),
             },
         });
         return this.parse(SignalEmitResponseSchema, raw);
@@ -438,10 +425,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
         return this.parse(BloomRunSchema, raw);
     }
 
-    async listRuns(
-        opts: CallOptions,
-        filter: ListRunsFilter,
-    ): Promise<BloomRunListResponse> {
+    async listRuns(opts: CallOptions, filter: ListRunsFilter): Promise<BloomRunListResponse> {
         const params = new URLSearchParams();
         if (filter.triggerId !== undefined) params.set("trigger_id", filter.triggerId);
         if (filter.status !== undefined) params.set("status", filter.status);
@@ -455,10 +439,7 @@ export class UndiciOrchidAPIClient implements OrchidAPIClient {
         return this.parse(BloomRunListResponseSchema, raw);
     }
 
-    async listRunsForSignal(
-        opts: CallOptions,
-        signalId: string,
-    ): Promise<BloomRunListResponse> {
+    async listRunsForSignal(opts: CallOptions, signalId: string): Promise<BloomRunListResponse> {
         // orchid-api's ``GET /signals/{id}`` returns the signal but
         // not its runs; the gateway resolves runs by listing the
         // recent window and filtering by signal_id client-side.

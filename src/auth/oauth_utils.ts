@@ -14,7 +14,6 @@ import { OrchidConfigError } from "../errors.js";
 
 import type { GatewayTokenRecord } from "./stores.js";
 
-
 export function writeJson(res: ServerResponse, status: number, body: unknown): void {
     res.writeHead(status, { "Content-Type": "application/json" });
     res.end(JSON.stringify(body));
@@ -131,7 +130,6 @@ export function errorMessage(err: unknown): string {
     if (err instanceof Error) return err.message;
     return String(err);
 }
-
 
 export function validateBaseUrl(base: string): void {
     try {

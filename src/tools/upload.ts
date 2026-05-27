@@ -92,8 +92,6 @@ export function registerUploadFileTool(server: McpServer, ctx: AppContext): Regi
             inputSchema: uploadInputShape,
         },
         async (args, extra) =>
-            runWithTooling(ctx, "orchid_upload_file", extra, () =>
-                runUploadFile(ctx, extra, args),
-            ),
+            runWithTooling(ctx, "orchid_upload_file", extra, () => runUploadFile(ctx, extra, args)),
     );
 }

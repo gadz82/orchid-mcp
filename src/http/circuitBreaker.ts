@@ -126,10 +126,7 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
      * TypeScript errors at compile time, not as ``Unknown method``
      * runtime exceptions.
      */
-    private wrap<Args extends unknown[], R>(
-        name: string,
-        fn: AsyncFn<Args, R>,
-    ): AsyncFn<Args, R> {
+    private wrap<Args extends unknown[], R>(name: string, fn: AsyncFn<Args, R>): AsyncFn<Args, R> {
         const breaker = new CircuitBreaker<Args, R>(fn, this.options);
         breaker.on("open", () => {
             this.logger.warn({ method: name }, "circuit breaker opened");
@@ -219,10 +216,7 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
      * failures degrade the enrichment but must never block the tool
      * result from returning, so the breaker is deliberately skipped.
      */
-    getMcpServerAuthorizeUrl(
-        opts: CallOptions,
-        serverName: string,
-    ): Promise<McpServerAuthorize> {
+    getMcpServerAuthorizeUrl(opts: CallOptions, serverName: string): Promise<McpServerAuthorize> {
         return this.inner.getMcpServerAuthorizeUrl(opts, serverName);
     }
     /**
@@ -276,10 +270,7 @@ export class CircuitBreakerOrchidAPIClient implements OrchidAPIClient {
      * that's already breaker-protected, plus a pure-function filter.
      * Layering a second breaker would just double-count failures.
      */
-    listRunsForSignal(
-        opts: CallOptions,
-        signalId: string,
-    ): Promise<BloomRunListResponse> {
+    listRunsForSignal(opts: CallOptions, signalId: string): Promise<BloomRunListResponse> {
         return this.inner.listRunsForSignal(opts, signalId);
     }
     close(): Promise<void> {

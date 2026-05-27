@@ -99,8 +99,6 @@ export function registerResumeChatTool(server: McpServer, ctx: AppContext): Regi
             inputSchema: resumeInputShape,
         },
         async (args, extra: ToolHandlerExtra) =>
-            runWithTooling(ctx, "orchid_resume_chat", extra, () =>
-                runResumeChat(ctx, extra, args),
-            ),
+            runWithTooling(ctx, "orchid_resume_chat", extra, () => runResumeChat(ctx, extra, args)),
     );
 }

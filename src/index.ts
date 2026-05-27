@@ -133,10 +133,7 @@ async function buildAuthStrategy(
         // Empty bearer — ``/auth/exchange-code`` is unauthenticated
         // on the server side (PKCE + upstream code binding provide
         // the natural protection).
-        const response = await httpClient.exchangeAuthorizationCode(
-            { bearer: "" },
-            params,
-        );
+        const response = await httpClient.exchangeAuthorizationCode({ bearer: "" }, params);
         return normaliseUpstreamTokenResponse(response);
     };
 
@@ -202,9 +199,7 @@ async function buildAuthStrategy(
  * forbids us from assigning a ``T | undefined`` to a ``T?`` slot.
  * The spread-only-when-defined dance below threads that needle.
  */
-function normaliseUpstreamTokenResponse(
-    response: UpstreamTokenResponse,
-): {
+function normaliseUpstreamTokenResponse(response: UpstreamTokenResponse): {
     access_token: string;
     refresh_token?: string;
     token_type?: string;

@@ -318,7 +318,6 @@ describe("runAskOrchid — happy path", () => {
         expect(httpClient.createChatCalls[0]?.opts.authDomain).toBe("acme.example.com");
         expect(httpClient.sendCalls[0]?.opts.authDomain).toBe("acme.example.com");
     });
-
 });
 
 describe("runAskOrchid — auth_required enrichment", () => {
@@ -423,8 +422,7 @@ describe("runAskOrchid — auth_required enrichment", () => {
         // told which server needs auth, even though we couldn't get the URL.
         expect(text).toMatch(/slack: \(authorize URL temporarily unavailable/);
 
-        const links = (result.structuredContent as { auth_links: { server: string }[] })
-            .auth_links;
+        const links = (result.structuredContent as { auth_links: { server: string }[] }).auth_links;
         expect(links).toHaveLength(2);
         const slackLink = links.find((l) => l.server === "slack");
         expect(slackLink).toBeDefined();
@@ -450,8 +448,7 @@ describe("runAskOrchid — auth_required enrichment", () => {
         expect(text).toContain("Plan.");
         // Both servers fall back with a plain-text hint; URLs are absent.
         expect(text).not.toMatch(/https:\/\//);
-        const links = (result.structuredContent as { auth_links: { server: string }[] })
-            .auth_links;
+        const links = (result.structuredContent as { auth_links: { server: string }[] }).auth_links;
         expect(links).toHaveLength(2);
     });
 
@@ -461,9 +458,7 @@ describe("runAskOrchid — auth_required enrichment", () => {
             chat_id: "chat-1",
             tenant_id: "t",
             status: "interrupted",
-            approvals_needed: [
-                { tool: "t", args: {}, agent: "a", interrupt_id: "i" },
-            ],
+            approvals_needed: [{ tool: "t", args: {}, agent: "a", interrupt_id: "i" }],
         };
         await runAskOrchid(ctx, reqCtx, { message: "book it" });
         expect(httpClient.authorizeCalls).toHaveLength(0);

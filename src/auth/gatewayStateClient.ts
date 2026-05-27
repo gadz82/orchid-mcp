@@ -42,11 +42,7 @@ import { isTimeoutLike } from "../http/undiciOrchidClient.js";
 
 import type { OrchidIdentity } from "./base.js";
 
-import type {
-    AuthCodeRecord,
-    GatewayTokenRecord,
-    RegisteredClient,
-} from "./stores.js";
+import type { AuthCodeRecord, GatewayTokenRecord, RegisteredClient } from "./stores.js";
 
 /* ── Wire schemas (mirror orchid-api DTOs) ───────────────────── */
 

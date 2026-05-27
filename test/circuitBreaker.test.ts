@@ -162,7 +162,10 @@ describe("CircuitBreakerOrchidAPIClient", () => {
             try {
                 await breakerClient.listChats(opts);
             } catch (err) {
-                if (err instanceof OrchidGatewayError && err.message.includes("circuit breaker open")) {
+                if (
+                    err instanceof OrchidGatewayError &&
+                    err.message.includes("circuit breaker open")
+                ) {
                     // Success — breaker opened at some point.
                     return;
                 }
@@ -313,5 +316,4 @@ describe("CircuitBreakerOrchidAPIClient", () => {
         await client.close();
         expect(innerClosed).toBe(true);
     });
-
 });

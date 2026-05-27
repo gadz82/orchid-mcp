@@ -103,18 +103,18 @@ Everything the gateway knows about an Orchid chat comes from an HTTP call. The g
 
 ## Key Runtime Dependencies
 
-| Package                                       | Role                                                            |
-| --------------------------------------------- | --------------------------------------------------------------- |
-| `@modelcontextprotocol/sdk`                   | Official MCP TypeScript SDK (pinned)                            |
-| `zod`                                         | Tool-input, settings, and upstream-response validation          |
-| `undici`                                      | HTTP client (Agent-backed pool, finer-grained timeouts)         |
-| `pino`                                        | Structured JSON logging                                         |
-| `lru-cache`                                   | In-memory session + store backing                               |
-| `openid-client`                               | Upstream OIDC helpers (scoped use — most OAuth is raw fetch)    |
-| `opossum`                                     | Circuit breaker                                                 |
-| `@opentelemetry/api` + `sdk-node`             | Tracing (opt-in via `ORCHID_MCP_TRACING_ENABLED`)               |
-| `@opentelemetry/instrumentation-undici`       | Automatic undici span emission when tracing is on               |
-| `ioredis` _(optional)_                        | Redis-backed session map for multi-replica deployments          |
+| Package                                 | Role                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `@modelcontextprotocol/sdk`             | Official MCP TypeScript SDK (pinned)                         |
+| `zod`                                   | Tool-input, settings, and upstream-response validation       |
+| `undici`                                | HTTP client (Agent-backed pool, finer-grained timeouts)      |
+| `pino`                                  | Structured JSON logging                                      |
+| `lru-cache`                             | In-memory session + store backing                            |
+| `openid-client`                         | Upstream OIDC helpers (scoped use — most OAuth is raw fetch) |
+| `opossum`                               | Circuit breaker                                              |
+| `@opentelemetry/api` + `sdk-node`       | Tracing (opt-in via `ORCHID_MCP_TRACING_ENABLED`)            |
+| `@opentelemetry/instrumentation-undici` | Automatic undici span emission when tracing is on            |
+| `ioredis` _(optional)_                  | Redis-backed session map for multi-replica deployments       |
 
 ## Configuration
 
@@ -160,19 +160,19 @@ The gateway exposes:
 ## MCP gateway exposure config (fetched per session)
 
 At each MCP session init the gateway calls orchid-api's
-``GET /mcp-gateway/config`` — once — using the session's resolved
-bearer (service-account or OAuth-issued).  The response (see
-``src/mcpGateway/applyConfig.ts``) applies:
+`GET /mcp-gateway/config` — once — using the session's resolved
+bearer (service-account or OAuth-issued). The response (see
+`src/mcpGateway/applyConfig.ts`) applies:
 
-- **Tool title/description overrides** via ``RegisteredTool.update()``
-  before the client's ``tools/list`` returns.
-- **MCP Prompts** via ``server.registerPrompt()`` — each prompt
-  renders its ``{{var}}`` template client-side on ``prompts/get``.
+- **Tool title/description overrides** via `RegisteredTool.update()`
+  before the client's `tools/list` returns.
+- **MCP Prompts** via `server.registerPrompt()` — each prompt
+  renders its `{{var}}` template client-side on `prompts/get`.
 
 The fetch is **best-effort** — missing / unreachable / 4xx endpoint
 falls back to the gateway's built-in defaults with a single warning
-log.  A session always comes up.  See ``src/server.ts`` →
-``tryFetchGatewayConfig``.  The config is entirely optional upstream
+log. A session always comes up. See `src/server.ts` →
+`tryFetchGatewayConfig`. The config is entirely optional upstream
 (orchid/ ships defaults).
 
 ## Common Pitfalls

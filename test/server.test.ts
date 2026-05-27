@@ -521,9 +521,7 @@ describe("Streamable HTTP server — OAuth-mode auth enforcement", () => {
             rateLimiter: new NoopRateLimiter(),
         };
         const built = await buildServer({ ctx });
-        await new Promise<void>((resolve) =>
-            built.httpServer.listen(0, "127.0.0.1", resolve),
-        );
+        await new Promise<void>((resolve) => built.httpServer.listen(0, "127.0.0.1", resolve));
         const addr = built.httpServer.address() as AddressInfo;
         const baseUrl = `http://127.0.0.1:${String(addr.port)}`;
         const stop = async (): Promise<void> => {
@@ -619,9 +617,7 @@ describe("Streamable HTTP server — OAuth-mode auth enforcement", () => {
             rateLimiter: new NoopRateLimiter(),
         };
         const built = await buildServer({ ctx });
-        await new Promise<void>((resolve) =>
-            built.httpServer.listen(0, "127.0.0.1", resolve),
-        );
+        await new Promise<void>((resolve) => built.httpServer.listen(0, "127.0.0.1", resolve));
         const addr = built.httpServer.address() as AddressInfo;
         const baseUrl = `http://127.0.0.1:${String(addr.port)}`;
         stopGateway = async (): Promise<void> => {

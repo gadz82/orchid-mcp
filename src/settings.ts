@@ -16,9 +16,7 @@ export const SettingsSchema = z
          *   The gateway holds no upstream OAuth secrets — code
          *   exchange and refresh both delegate to orchid-api.
          */
-        authMode: z
-            .enum(["service_account", "oauth", "discover"])
-            .default("service_account"),
+        authMode: z.enum(["service_account", "oauth", "discover"]).default("service_account"),
         serviceAccountToken: z.string().optional(),
         serviceAccountAuthDomain: z.string().optional(),
 

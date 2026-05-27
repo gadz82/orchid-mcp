@@ -196,7 +196,10 @@ describe("OAuth metadata", () => {
     });
 
     it("omits registration_endpoint when DCR is disabled", async () => {
-        await startGatewayOAuthServer(() => ({ ...baseOptions(), clientRegistrationEnabled: false }));
+        await startGatewayOAuthServer(() => ({
+            ...baseOptions(),
+            clientRegistrationEnabled: false,
+        }));
         const res = await fetch(`${baseUrl}/.well-known/oauth-authorization-server`);
         const meta = (await res.json()) as Record<string, unknown>;
         expect(meta.registration_endpoint).toBeUndefined();
@@ -234,7 +237,10 @@ describe("Dynamic Client Registration", () => {
     });
 
     it("returns 404 when DCR is disabled", async () => {
-        await startGatewayOAuthServer(() => ({ ...baseOptions(), clientRegistrationEnabled: false }));
+        await startGatewayOAuthServer(() => ({
+            ...baseOptions(),
+            clientRegistrationEnabled: false,
+        }));
         const res = await fetch(`${baseUrl}/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -437,9 +443,9 @@ describe("MCPOAuthStrategy.resolve", () => {
     });
 
     it("throws OrchidUnauthorizedError on a missing token", async () => {
-        await expect(
-            strategy.resolve({ mcpSessionId: "s", headers: {} }),
-        ).rejects.toBeInstanceOf(OrchidUnauthorizedError);
+        await expect(strategy.resolve({ mcpSessionId: "s", headers: {} })).rejects.toBeInstanceOf(
+            OrchidUnauthorizedError,
+        );
     });
 
     it("throws OrchidUnauthorizedError on an unknown token", async () => {
@@ -729,10 +735,10 @@ describe("upstream-refresh delegation", () => {
             idpExpiresAt: Math.floor(Date.now() / 1000) - 10,
         };
         void opts;
-        await (
-            // The strategy owns the store via ``opts`` — access it
-            // through the mounted strategy to keep the test reading
-            // the SAME store the routes use.
+        await // The strategy owns the store via ``opts`` — access it
+        // through the mounted strategy to keep the test reading
+        // the SAME store the routes use.
+        (
             strategy as unknown as {
                 opts: { tokenStore: { issue: (r: GatewayTokenRecord) => Promise<void> } };
             }

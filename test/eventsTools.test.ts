@@ -14,10 +14,7 @@ import { describe, expect, it } from "vitest";
 import type { AuthStrategy, MCPRequestContext, OrchidIdentity } from "../src/auth/base.js";
 import { SHARED_SUBJECT } from "../src/auth/serviceAccount.js";
 import type { AppContext } from "../src/context.js";
-import {
-    OrchidGatewayError,
-    OrchidServerError,
-} from "../src/errors.js";
+import { OrchidGatewayError, OrchidServerError } from "../src/errors.js";
 import type {
     BloomRun,
     BloomRunListResponse,
@@ -106,10 +103,7 @@ class FakeEventsClient implements OrchidAPIClient {
         this.listRunsCalls.push({ opts, filter });
         return this.listRunsResult;
     }
-    async listRunsForSignal(
-        opts: CallOptions,
-        signalId: string,
-    ): Promise<BloomRunListResponse> {
+    async listRunsForSignal(opts: CallOptions, signalId: string): Promise<BloomRunListResponse> {
         this.listRunsForSignalCalls.push({ opts, signalId });
         if (this.listRunsForSignalResult instanceof Error) throw this.listRunsForSignalResult;
         return this.listRunsForSignalResult;
@@ -193,7 +187,10 @@ function makeCtx(client?: FakeEventsClient) {
 class CapturingServer {
     handlers: Record<
         string,
-        (args: unknown, extra: unknown) => Promise<{
+        (
+            args: unknown,
+            extra: unknown,
+        ) => Promise<{
             isError?: boolean;
             content: { type: string; text: string }[];
             structuredContent?: Record<string, unknown>;
@@ -534,8 +531,8 @@ describe("orchid_bloom_list", () => {
 describe("eventsNoop helper", () => {
     it("throws a descriptive NotImplementedError when called", async () => {
         const stub = eventsNoop();
-        await expect(stub.emitSignal({ bearer: "" }, { type: "x", tenantKey: "t" })).rejects.toThrow(
-            /not implemented/,
-        );
+        await expect(
+            stub.emitSignal({ bearer: "" }, { type: "x", tenantKey: "t" }),
+        ).rejects.toThrow(/not implemented/);
     });
 });

@@ -193,9 +193,7 @@ export function registerChatMgmtTools(server: McpServer, ctx: AppContext): ChatM
             inputSchema: switchChatInputShape,
         },
         async (args, extra) =>
-            runWithTooling(ctx, "orchid_switch_chat", extra, () =>
-                runSwitchChat(ctx, extra, args),
-            ),
+            runWithTooling(ctx, "orchid_switch_chat", extra, () => runSwitchChat(ctx, extra, args)),
     );
 
     return { new: newTool, list: listTool, switch: switchTool };

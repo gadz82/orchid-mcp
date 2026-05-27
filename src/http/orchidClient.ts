@@ -486,10 +486,7 @@ export interface OrchidAuthClient {
      * (``ChatResponse.auth_required`` entry).  Returns the URL + state
      * so the gateway can surface a clickable link to the host LLM.
      */
-    getMcpServerAuthorizeUrl(
-        opts: CallOptions,
-        serverName: string,
-    ): Promise<McpServerAuthorize>;
+    getMcpServerAuthorizeUrl(opts: CallOptions, serverName: string): Promise<McpServerAuthorize>;
     /**
      * Proxy an upstream-OAuth ``grant_type=authorization_code``
      * exchange through orchid-api's ``POST /auth/exchange-code``.
@@ -565,7 +562,8 @@ export interface OrchidEventsClient {
  * :class:`OrchidGatewayConfigClient`) instead.
  */
 export interface OrchidAPIClient
-    extends OrchidChatClient,
+    extends
+        OrchidChatClient,
         OrchidAuthClient,
         OrchidEventsClient,
         OrchidGatewayConfigClient,

@@ -8,9 +8,9 @@ describe("renderTemplate", () => {
     });
 
     it("substitutes multiple placeholders", () => {
-        expect(
-            renderTemplate("{{a}} + {{b}} = {{c}}", { a: "1", b: "2", c: "3" }),
-        ).toBe("1 + 2 = 3");
+        expect(renderTemplate("{{a}} + {{b}} = {{c}}", { a: "1", b: "2", c: "3" })).toBe(
+            "1 + 2 = 3",
+        );
     });
 
     it("leaves undeclared references as literals", () => {
@@ -22,9 +22,7 @@ describe("renderTemplate", () => {
     });
 
     it("ignores malformed placeholders", () => {
-        expect(renderTemplate("Hi {who}} and {{who}", { who: "x" })).toBe(
-            "Hi {who}} and {{who}",
-        );
+        expect(renderTemplate("Hi {who}} and {{who}", { who: "x" })).toBe("Hi {who}} and {{who}");
     });
 
     it("does not recurse into substituted output", () => {
@@ -36,8 +34,6 @@ describe("renderTemplate", () => {
     });
 
     it("skips placeholders starting with a digit (not a valid identifier)", () => {
-        expect(renderTemplate("{{1bad}} stays", { "1bad": "x" })).toBe(
-            "{{1bad}} stays",
-        );
+        expect(renderTemplate("{{1bad}} stays", { "1bad": "x" })).toBe("{{1bad}} stays");
     });
 });

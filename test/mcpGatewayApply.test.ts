@@ -233,9 +233,7 @@ describe("MCP gateway config — applied at session init", () => {
                     name: "greet",
                     title: "Greet",
                     description: "Say hello",
-                    arguments: [
-                        { name: "who", description: "Who to greet", required: true },
-                    ],
+                    arguments: [{ name: "who", description: "Who to greet", required: true }],
                     template: "Say hello to {{who}}.",
                 },
             ],

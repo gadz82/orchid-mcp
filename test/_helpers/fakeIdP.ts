@@ -100,9 +100,7 @@ export class FakeIdP {
      * to the existing value), so tests can reset state after exercising
      * a non-default configuration.
      */
-    setOptions(
-        opts: { [K in keyof FakeIdPOptions]?: FakeIdPOptions[K] | undefined },
-    ): void {
+    setOptions(opts: { [K in keyof FakeIdPOptions]?: FakeIdPOptions[K] | undefined }): void {
         const merged = { ...this.opts } as Record<string, unknown>;
         for (const [key, value] of Object.entries(opts)) {
             if (value === undefined) {
@@ -233,9 +231,7 @@ export class FakeIdP {
         }
         const payload: Record<string, unknown> = {
             [wrapper.userIdField]:
-                wrapper.userIdAsNumber === true
-                    ? Number(this.opts.user.sub)
-                    : this.opts.user.sub,
+                wrapper.userIdAsNumber === true ? Number(this.opts.user.sub) : this.opts.user.sub,
         };
         if (this.opts.user.email !== undefined) {
             payload[wrapper.emailField] = this.opts.user.email;

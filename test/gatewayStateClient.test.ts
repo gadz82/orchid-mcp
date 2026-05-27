@@ -23,21 +23,14 @@ import {
     OrchidTimeoutError,
     OrchidUnauthorizedError,
 } from "../src/errors.js";
-import {
-    HttpGatewayStateClient,
-    type GatewayStateClient,
-} from "../src/auth/gatewayStateClient.js";
+import { HttpGatewayStateClient, type GatewayStateClient } from "../src/auth/gatewayStateClient.js";
 import {
     HttpAuthCodeStore,
     HttpClientStore,
     HttpGatewayTokenStore,
     buildHttpStoreSet,
 } from "../src/auth/httpStores.js";
-import type {
-    AuthCodeRecord,
-    GatewayTokenRecord,
-    RegisteredClient,
-} from "../src/auth/stores.js";
+import type { AuthCodeRecord, GatewayTokenRecord, RegisteredClient } from "../src/auth/stores.js";
 
 const BASE = "http://orchid-api.test";
 const SERVICE_TOKEN = "shared-sek-123";
@@ -268,13 +261,8 @@ describe("HttpAuthCodeStore", () => {
 
     it("getByUpstreamState returns null on 404", async () => {
         server.use(
-            http.post(
-                `${BASE}/mcp-gateway/state/auth-codes/lookup-by-upstream-state`,
-                () =>
-                    HttpResponse.json(
-                        { detail: "auth code not found" },
-                        { status: 404 },
-                    ),
+            http.post(`${BASE}/mcp-gateway/state/auth-codes/lookup-by-upstream-state`, () =>
+                HttpResponse.json({ detail: "auth code not found" }, { status: 404 }),
             ),
         );
         const store = new HttpAuthCodeStore(client);
@@ -284,13 +272,10 @@ describe("HttpAuthCodeStore", () => {
     it("update sends only specified fields (partial patch)", async () => {
         let body: Record<string, unknown> | null = null;
         server.use(
-            http.patch(
-                `${BASE}/mcp-gateway/state/auth-codes/authcode-xyz`,
-                async ({ request }) => {
-                    body = (await request.json()) as Record<string, unknown>;
-                    return new HttpResponse(null, { status: 204 });
-                },
-            ),
+            http.patch(`${BASE}/mcp-gateway/state/auth-codes/authcode-xyz`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return new HttpResponse(null, { status: 204 });
+            }),
         );
         const store = new HttpAuthCodeStore(client);
         await store.update("authcode-xyz", {
@@ -309,13 +294,10 @@ describe("HttpAuthCodeStore", () => {
     it("update with no fields sends an empty object (server-side no-op)", async () => {
         let body: Record<string, unknown> | null = null;
         server.use(
-            http.patch(
-                `${BASE}/mcp-gateway/state/auth-codes/authcode-xyz`,
-                async ({ request }) => {
-                    body = (await request.json()) as Record<string, unknown>;
-                    return new HttpResponse(null, { status: 204 });
-                },
-            ),
+            http.patch(`${BASE}/mcp-gateway/state/auth-codes/authcode-xyz`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return new HttpResponse(null, { status: 204 });
+            }),
         );
         const store = new HttpAuthCodeStore(client);
         await store.update("authcode-xyz", {});
@@ -325,34 +307,28 @@ describe("HttpAuthCodeStore", () => {
     it("consume returns the record then the next call returns null", async () => {
         let calls = 0;
         server.use(
-            http.post(
-                `${BASE}/mcp-gateway/state/auth-codes/authcode-xyz/consume`,
-                () => {
-                    calls += 1;
-                    if (calls === 1) {
-                        return HttpResponse.json({
-                            code: "authcode-xyz",
-                            client_id: "cli-abc",
-                            redirect_uri: "http://cb",
-                            code_challenge: "c",
-                            code_challenge_method: "S256",
-                            upstream_state: "ust-123",
-                            upstream_code_verifier: "v",
-                            scopes: ["mcp.read"],
-                            client_state: "",
-                            identity: null,
-                            idp_access_token: "",
-                            idp_refresh_token: "",
-                            idp_expires_at: 0,
-                            created_at: 1,
-                        });
-                    }
-                    return HttpResponse.json(
-                        { detail: "auth code not found" },
-                        { status: 404 },
-                    );
-                },
-            ),
+            http.post(`${BASE}/mcp-gateway/state/auth-codes/authcode-xyz/consume`, () => {
+                calls += 1;
+                if (calls === 1) {
+                    return HttpResponse.json({
+                        code: "authcode-xyz",
+                        client_id: "cli-abc",
+                        redirect_uri: "http://cb",
+                        code_challenge: "c",
+                        code_challenge_method: "S256",
+                        upstream_state: "ust-123",
+                        upstream_code_verifier: "v",
+                        scopes: ["mcp.read"],
+                        client_state: "",
+                        identity: null,
+                        idp_access_token: "",
+                        idp_refresh_token: "",
+                        idp_expires_at: 0,
+                        created_at: 1,
+                    });
+                }
+                return HttpResponse.json({ detail: "auth code not found" }, { status: 404 });
+            }),
         );
         const store = new HttpAuthCodeStore(client);
         const first = await store.consume("authcode-xyz");
@@ -421,21 +397,18 @@ describe("HttpGatewayTokenStore", () => {
     it("getByAccessToken sends access_token in introspect body and parses response", async () => {
         let body: Record<string, unknown> | null = null;
         server.use(
-            http.post(
-                `${BASE}/mcp-gateway/state/tokens/introspect`,
-                async ({ request }) => {
-                    body = (await request.json()) as Record<string, unknown>;
-                    return HttpResponse.json({
-                        access_token: "at-1",
-                        refresh_token: "rt-1",
-                        client_id: "cli-abc",
-                        subject: "u-42",
-                        identity: { bearer: "b", subject: "u-42" },
-                        scopes: ["mcp.read"],
-                        expires_at: 9999,
-                    });
-                },
-            ),
+            http.post(`${BASE}/mcp-gateway/state/tokens/introspect`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({
+                    access_token: "at-1",
+                    refresh_token: "rt-1",
+                    client_id: "cli-abc",
+                    subject: "u-42",
+                    identity: { bearer: "b", subject: "u-42" },
+                    scopes: ["mcp.read"],
+                    expires_at: 9999,
+                });
+            }),
         );
         const store = new HttpGatewayTokenStore(client);
         const result = await store.getByAccessToken("at-1");
@@ -448,21 +421,18 @@ describe("HttpGatewayTokenStore", () => {
     it("getByRefreshToken sends refresh_token instead", async () => {
         let body: Record<string, unknown> | null = null;
         server.use(
-            http.post(
-                `${BASE}/mcp-gateway/state/tokens/introspect`,
-                async ({ request }) => {
-                    body = (await request.json()) as Record<string, unknown>;
-                    return HttpResponse.json({
-                        access_token: "at-1",
-                        refresh_token: "rt-1",
-                        client_id: "cli-abc",
-                        subject: "u-42",
-                        identity: { bearer: "b", subject: "u-42" },
-                        scopes: ["mcp.read"],
-                        expires_at: 9999,
-                    });
-                },
-            ),
+            http.post(`${BASE}/mcp-gateway/state/tokens/introspect`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({
+                    access_token: "at-1",
+                    refresh_token: "rt-1",
+                    client_id: "cli-abc",
+                    subject: "u-42",
+                    identity: { bearer: "b", subject: "u-42" },
+                    scopes: ["mcp.read"],
+                    expires_at: 9999,
+                });
+            }),
         );
         const store = new HttpGatewayTokenStore(client);
         const result = await store.getByRefreshToken("rt-1");
@@ -484,13 +454,10 @@ describe("HttpGatewayTokenStore", () => {
     it("revoke DELETEs the encoded token", async () => {
         let seenUrl: string | null = null;
         server.use(
-            http.delete(
-                `${BASE}/mcp-gateway/state/tokens/:token`,
-                ({ request }) => {
-                    seenUrl = request.url;
-                    return new HttpResponse(null, { status: 204 });
-                },
-            ),
+            http.delete(`${BASE}/mcp-gateway/state/tokens/:token`, ({ request }) => {
+                seenUrl = request.url;
+                return new HttpResponse(null, { status: 204 });
+            }),
         );
         const store = new HttpGatewayTokenStore(client);
         await store.revoke("at with/slash");

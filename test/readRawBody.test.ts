@@ -129,7 +129,10 @@ describe("readRawBody", () => {
         const promise = readRawBody(req);
 
         let settledCount = 0;
-        promise.then(() => settledCount++, () => settledCount++);
+        promise.then(
+            () => settledCount++,
+            () => settledCount++,
+        );
 
         process.nextTick(() => {
             req.emit("data", Buffer.from("one"));

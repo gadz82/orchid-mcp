@@ -113,9 +113,7 @@ export type UpstreamExchangeDelegate = (params: {
  * lives in :mod:`src/index.ts`, which builds the delegate from
  * ``orchid-api``'s ``/auth/resolve-identity`` endpoint.
  */
-export type UpstreamIdentityDelegate = (
-    accessToken: string,
-) => Promise<OrchidIdentity>;
+export type UpstreamIdentityDelegate = (accessToken: string) => Promise<OrchidIdentity>;
 
 /**
  * Delegate for the upstream ``grant_type=refresh_token`` exchange.
@@ -131,9 +129,7 @@ export type UpstreamIdentityDelegate = (
  * gateway tokens — the upstream bearer stays stale and the
  * user eventually hits 401 on the next backend call.
  */
-export type UpstreamRefreshDelegate = (
-    refreshToken: string,
-) => Promise<IdPTokens>;
+export type UpstreamRefreshDelegate = (refreshToken: string) => Promise<IdPTokens>;
 
 /** Everything the strategy needs at runtime, injected from ``index.ts``. */
 export interface MCPOAuthStrategyOptions {

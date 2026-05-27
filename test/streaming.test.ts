@@ -180,10 +180,7 @@ describe("orchid_ask — streaming path", () => {
             sessionId: "sess-1",
             requestInfo: { headers: {} },
             _meta: { progressToken: "tok-123" },
-            sendNotification: async (n: {
-                method: string;
-                params: Record<string, unknown>;
-            }) => {
+            sendNotification: async (n: { method: string; params: Record<string, unknown> }) => {
                 sentNotifications.push(n);
             },
         };
@@ -206,9 +203,7 @@ describe("orchid_ask — streaming path", () => {
         expect(sentNotifications.length).toBeGreaterThan(0);
         const progressValues = sentNotifications.map((n) => n.params.progress);
         expect(progressValues[0]).toBe(1);
-        expect(sentNotifications.every((n) => n.params.progressToken === "tok-123")).toBe(
-            true,
-        );
+        expect(sentNotifications.every((n) => n.params.progressToken === "tok-123")).toBe(true);
     });
 
     it("coalesces token bursts via streamingProgressIntervalMs", async () => {

@@ -457,17 +457,11 @@ describe("UndiciOrchidAPIClient — sendMessageStream", () => {
             }),
         );
         const events: string[] = [];
-        const done = await client.sendMessageStream(
-            bearerOpts,
-            "chat-1",
-            "hi",
-            undefined,
-            {
-                onEvent: (e) => {
-                    events.push(e.type);
-                },
+        const done = await client.sendMessageStream(bearerOpts, "chat-1", "hi", undefined, {
+            onEvent: (e) => {
+                events.push(e.type);
             },
-        );
+        });
         expect(events).toEqual(["token", "token", "done"]);
         expect(done.response).toBe("Hello world.");
         expect(done.agents_used).toEqual(["x"]);
@@ -476,10 +470,9 @@ describe("UndiciOrchidAPIClient — sendMessageStream", () => {
     it("throws OrchidGatewayError when the stream ends with an error event", async () => {
         server.use(
             http.post(`${BASE}/chats/:id/messages/stream`, () => {
-                return new Response(
-                    sseBody(['data: {"type":"error","message":"kaboom"}\n\n']),
-                    { headers: { "Content-Type": "text/event-stream" } },
-                );
+                return new Response(sseBody(['data: {"type":"error","message":"kaboom"}\n\n']), {
+                    headers: { "Content-Type": "text/event-stream" },
+                });
             }),
         );
         await expect(
@@ -522,17 +515,11 @@ describe("UndiciOrchidAPIClient — sendMessageStream", () => {
             }),
         );
         const seen: string[] = [];
-        const done = await client.sendMessageStream(
-            bearerOpts,
-            "chat-1",
-            "hi",
-            undefined,
-            {
-                onEvent: (e) => {
-                    seen.push(e.type);
-                },
+        const done = await client.sendMessageStream(bearerOpts, "chat-1", "hi", undefined, {
+            onEvent: (e) => {
+                seen.push(e.type);
             },
-        );
+        });
         expect(seen).toEqual(["done"]);
         expect(done.response).toBe("ok");
     });
@@ -646,9 +633,7 @@ describe("UndiciOrchidAPIClient — getGatewayConfig", () => {
     });
 
     it("defaults empty tools + prompts when orchid-api omits them", async () => {
-        server.use(
-            http.get(`${BASE}/mcp-gateway/config`, () => HttpResponse.json({})),
-        );
+        server.use(http.get(`${BASE}/mcp-gateway/config`, () => HttpResponse.json({})));
         const cfg = await client.getGatewayConfig(bearerOpts);
         expect(cfg.tools).toEqual({});
         expect(cfg.prompts).toEqual([]);
@@ -707,11 +692,7 @@ describe("UndiciOrchidAPIClient — getAuthInfo", () => {
     });
 
     it("rejects a response missing required fields", async () => {
-        server.use(
-            http.get(`${BASE}/auth-info`, () =>
-                HttpResponse.json({ only: "junk" }),
-            ),
-        );
+        server.use(http.get(`${BASE}/auth-info`, () => HttpResponse.json({ only: "junk" })));
         await expect(client.getAuthInfo()).rejects.toBeInstanceOf(OrchidResponseShapeError);
     });
 
@@ -836,9 +817,9 @@ describe("UndiciOrchidAPIClient — getMcpServerAuthorizeUrl", () => {
                 HttpResponse.json({ detail: "no such server" }, { status: 404 }),
             ),
         );
-        await expect(
-            client.getMcpServerAuthorizeUrl(bearerOpts, "ghost"),
-        ).rejects.toBeInstanceOf(OrchidServerError);
+        await expect(client.getMcpServerAuthorizeUrl(bearerOpts, "ghost")).rejects.toBeInstanceOf(
+            OrchidServerError,
+        );
     });
 
     it("maps 401 to OrchidUnauthorizedError", async () => {
@@ -847,9 +828,9 @@ describe("UndiciOrchidAPIClient — getMcpServerAuthorizeUrl", () => {
                 HttpResponse.json({ detail: "nope" }, { status: 401 }),
             ),
         );
-        await expect(
-            client.getMcpServerAuthorizeUrl(bearerOpts, "github"),
-        ).rejects.toBeInstanceOf(OrchidUnauthorizedError);
+        await expect(client.getMcpServerAuthorizeUrl(bearerOpts, "github")).rejects.toBeInstanceOf(
+            OrchidUnauthorizedError,
+        );
     });
 
     it("rejects a response whose authorize_url is not a URL", async () => {
@@ -858,9 +839,9 @@ describe("UndiciOrchidAPIClient — getMcpServerAuthorizeUrl", () => {
                 HttpResponse.json({ authorize_url: "not-a-url", state: "s" }),
             ),
         );
-        await expect(
-            client.getMcpServerAuthorizeUrl(bearerOpts, "github"),
-        ).rejects.toBeInstanceOf(OrchidResponseShapeError);
+        await expect(client.getMcpServerAuthorizeUrl(bearerOpts, "github")).rejects.toBeInstanceOf(
+            OrchidResponseShapeError,
+        );
     });
 
     it("propagates authDomain + requestId headers", async () => {
@@ -1045,9 +1026,9 @@ describe("UndiciOrchidAPIClient — resolveIdentity", () => {
                 HttpResponse.json({ detail: "expired token" }, { status: 401 }),
             ),
         );
-        await expect(
-            client.resolveIdentity({ access_token: "bad" }),
-        ).rejects.toBeInstanceOf(OrchidUnauthorizedError);
+        await expect(client.resolveIdentity({ access_token: "bad" })).rejects.toBeInstanceOf(
+            OrchidUnauthorizedError,
+        );
     });
 
     it("maps upstream 502 (upstream unreachable) to OrchidServerError", async () => {
@@ -1056,9 +1037,9 @@ describe("UndiciOrchidAPIClient — resolveIdentity", () => {
                 HttpResponse.json({ detail: "bad gateway" }, { status: 502 }),
             ),
         );
-        await expect(
-            client.resolveIdentity({ access_token: "tok" }),
-        ).rejects.toBeInstanceOf(OrchidServerError);
+        await expect(client.resolveIdentity({ access_token: "tok" })).rejects.toBeInstanceOf(
+            OrchidServerError,
+        );
     });
 
     it("rejects a response missing subject (zod shape error)", async () => {
@@ -1068,9 +1049,9 @@ describe("UndiciOrchidAPIClient — resolveIdentity", () => {
                 HttpResponse.json({ bearer: "tok" }),
             ),
         );
-        await expect(
-            client.resolveIdentity({ access_token: "tok" }),
-        ).rejects.toBeInstanceOf(OrchidResponseShapeError);
+        await expect(client.resolveIdentity({ access_token: "tok" })).rejects.toBeInstanceOf(
+            OrchidResponseShapeError,
+        );
     });
 });
 
@@ -1112,10 +1093,7 @@ describe("UndiciOrchidAPIClient — refreshUpstreamToken", () => {
     it("maps upstream 503 (refresh_token not implemented on orchid-api side) to OrchidServerError", async () => {
         server.use(
             http.post(`${BASE}/auth/refresh-token`, () =>
-                HttpResponse.json(
-                    { detail: "refresh_token not implemented" },
-                    { status: 503 },
-                ),
+                HttpResponse.json({ detail: "refresh_token not implemented" }, { status: 503 }),
             ),
         );
         await expect(

@@ -30,26 +30,26 @@ The gateway registers nine MCP tools on every session — six chat-oriented + th
 
 ### Chat tools
 
-| Tool                  | Default purpose                                                                            | Key params |
-| --------------------- | ------------------------------------------------------------------------------------------ | ----------|
-| `orchid_ask`          | Ask Orchid's supervisor a question. Auto-creates a chat on first call; files attach here. | `query: string`, optional `files: [{name, base64}]` |
-| `orchid_new_chat`     | Start a fresh chat and bind the current MCP session to it.                                 | optional `title: string` |
-| `orchid_list_chats`   | List the user's existing chats.                                                            | (none) |
-| `orchid_switch_chat`  | Bind the current MCP session to a prior chat id.                                           | `chat_id: string` |
-| `orchid_upload_file`  | Upload a base64-encoded file into the current chat's RAG scope.                            | `name: string`, `content_b64: string` |
-| `orchid_resume_chat`  | Resume a HITL-paused chat with an approved/denied decision.                                | `chat_id: string`, `decision: "approve" \| "deny"`, optional `args: object` |
+| Tool                 | Default purpose                                                                           | Key params                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `orchid_ask`         | Ask Orchid's supervisor a question. Auto-creates a chat on first call; files attach here. | `query: string`, optional `files: [{name, base64}]`                         |
+| `orchid_new_chat`    | Start a fresh chat and bind the current MCP session to it.                                | optional `title: string`                                                    |
+| `orchid_list_chats`  | List the user's existing chats.                                                           | (none)                                                                      |
+| `orchid_switch_chat` | Bind the current MCP session to a prior chat id.                                          | `chat_id: string`                                                           |
+| `orchid_upload_file` | Upload a base64-encoded file into the current chat's RAG scope.                           | `name: string`, `content_b64: string`                                       |
+| `orchid_resume_chat` | Resume a HITL-paused chat with an approved/denied decision.                               | `chat_id: string`, `decision: "approve" \| "deny"`, optional `args: object` |
 
 ### Pollen + Bloom event tools
 
 These three forward to the upstream events surface (`/signals`, `/runs`, `/jobs`). They register on every session — but if `events.enabled: false` upstream, the tools succeed at the MCP layer and surface upstream's 503 verbatim.
 
-| Tool                   | Default purpose                                                                                                                                                                                                                              | Key params |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------|
-| `orchid_signal_emit`   | Emit a Pollen signal that may trigger one or more background Bloom runs upstream. Returns immediately with the persisted `signal_id` (the supervisor doesn't wait for the Bloom — use `orchid_bloom_status` to track resulting runs).        | `type: string`, `tenant_key: string`, optional `payload`, `user_id`, `correlation_id`, `dedupe_key` |
-| `orchid_bloom_status`  | Look up a Bloom run's status (and `result`, when finished). Pass either `signal_id` (returns the latest run for that signal) or `run_id` (returns that run directly). Returns `not_found` when the caller's bearer can't see the resource — visibility (§26) is enforced upstream. | exactly one of `signal_id` or `run_id` |
-| `orchid_bloom_list`    | List recent Bloom runs visible to the caller, optionally filtered by `trigger_id` / `status` / `since`. The §26 visibility filter lives upstream — the gateway never re-filters. Use `orchid_bloom_status` for full detail.                  | optional `trigger_id`, `status`, `since`, `limit` (1..500) |
+| Tool                  | Default purpose                                                                                                                                                                                                                                                                    | Key params                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `orchid_signal_emit`  | Emit a Pollen signal that may trigger one or more background Bloom runs upstream. Returns immediately with the persisted `signal_id` (the supervisor doesn't wait for the Bloom — use `orchid_bloom_status` to track resulting runs).                                              | `type: string`, `tenant_key: string`, optional `payload`, `user_id`, `correlation_id`, `dedupe_key` |
+| `orchid_bloom_status` | Look up a Bloom run's status (and `result`, when finished). Pass either `signal_id` (returns the latest run for that signal) or `run_id` (returns that run directly). Returns `not_found` when the caller's bearer can't see the resource — visibility (§26) is enforced upstream. | exactly one of `signal_id` or `run_id`                                                              |
+| `orchid_bloom_list`   | List recent Bloom runs visible to the caller, optionally filtered by `trigger_id` / `status` / `since`. The §26 visibility filter lives upstream — the gateway never re-filters. Use `orchid_bloom_status` for full detail.                                                        | optional `trigger_id`, `status`, `since`, `limit` (1..500)                                          |
 
-**Naming.** *Pollen* = the signal substrate (one ingest call → one persisted signal envelope). *Bloom* = the execution layer (one signal can produce N runs across N triggers; each retry is a new `JobRun` row with `attempt_number + 1`).
+**Naming.** _Pollen_ = the signal substrate (one ingest call → one persisted signal envelope). _Bloom_ = the execution layer (one signal can produce N runs across N triggers; each retry is a new `JobRun` row with `attempt_number + 1`).
 
 **Why not block the host LLM on the Bloom?** A Bloom can run for minutes, queue retries, and post its result into a chat that isn't the calling MCP session. The fire-and-poll pattern keeps the MCP tool call latency tight and matches the native Pollen + Bloom flow upstream.
 
@@ -193,35 +193,35 @@ All config is environment variables prefixed with `ORCHID_MCP_`. `src/settings.t
 
 ### Core
 
-| Variable                                 | Default                 | Purpose                                                   |
-| ---------------------------------------- | ----------------------- | --------------------------------------------------------- |
-| `ORCHID_MCP_ORCHID_API_URL`              | `http://localhost:8000` | Upstream orchid-api base URL                              |
-| `ORCHID_MCP_ORCHID_API_TIMEOUT_MS`       | `120000`                | Per-request timeout (supports multi-agent runs)           |
-| `ORCHID_MCP_HOST`                        | `0.0.0.0`               | Listen host                                               |
-| `ORCHID_MCP_PORT`                        | `9000`                  | Listen port                                               |
-| `ORCHID_MCP_LOG_LEVEL`                   | `info`                  | Pino log level (`trace`/`debug`/`info`/`warn`/`error`)    |
-| `ORCHID_MCP_SESSION_MAP_BACKEND`         | `memory`                | `memory` \| `redis`                                       |
-| `ORCHID_MCP_SESSION_MAP_REDIS_URL`       | —                       | Required when backend is `redis`                          |
-| `ORCHID_MCP_SESSION_TTL_S`               | `604800`                | Session map TTL, seconds (default 7 days)                 |
+| Variable                           | Default                 | Purpose                                                |
+| ---------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `ORCHID_MCP_ORCHID_API_URL`        | `http://localhost:8000` | Upstream orchid-api base URL                           |
+| `ORCHID_MCP_ORCHID_API_TIMEOUT_MS` | `120000`                | Per-request timeout (supports multi-agent runs)        |
+| `ORCHID_MCP_HOST`                  | `0.0.0.0`               | Listen host                                            |
+| `ORCHID_MCP_PORT`                  | `9000`                  | Listen port                                            |
+| `ORCHID_MCP_LOG_LEVEL`             | `info`                  | Pino log level (`trace`/`debug`/`info`/`warn`/`error`) |
+| `ORCHID_MCP_SESSION_MAP_BACKEND`   | `memory`                | `memory` \| `redis`                                    |
+| `ORCHID_MCP_SESSION_MAP_REDIS_URL` | —                       | Required when backend is `redis`                       |
+| `ORCHID_MCP_SESSION_TTL_S`         | `604800`                | Session map TTL, seconds (default 7 days)              |
 
 ### Auth
 
-| Variable                                   | Default             | Purpose                                                                  |
-| ------------------------------------------ | ------------------- | ------------------------------------------------------------------------ |
-| `ORCHID_MCP_AUTH_MODE`                     | `service_account`   | `service_account` \| `oauth` \| `discover`                               |
-| `ORCHID_MCP_SERVICE_ACCOUNT_TOKEN`         | —                   | Bearer token (required in `service_account` mode)                        |
-| `ORCHID_MCP_SERVICE_ACCOUNT_AUTH_DOMAIN`   | —                   | Optional `x-auth-domain` override                                        |
-| `ORCHID_MCP_I_UNDERSTAND_THE_RISK`         | `false`             | Required to bind `service_account` + `0.0.0.0`                           |
-| `ORCHID_MCP_OAUTH_ISSUER_URL`              | filled by discovery | Upstream IdP issuer (for `oauth` mode)                                   |
-| `ORCHID_MCP_OAUTH_AUTHORIZATION_ENDPOINT`  | filled by discovery | Upstream IdP `/authorize` URL                                            |
-| `ORCHID_MCP_OAUTH_CLIENT_ID`               | filled by discovery | Gateway's public PKCE client_id at the upstream IdP                      |
-| `ORCHID_MCP_OAUTH_AUTH_DOMAIN`             | filled by discovery | Optional X-Auth-Domain hint forwarded to orchid-api                      |
-| `ORCHID_MCP_OAUTH_SCOPES`                  | filled by discovery | Scope string requested from upstream                                     |
-| `ORCHID_MCP_OAUTH_GATEWAY_BASE_URL`        | —                   | Public URL the gateway is reachable at (goes into metadata)              |
-| `ORCHID_MCP_OAUTH_TOKEN_TTL_S`             | `3600`              | Lifetime of gateway-issued access tokens                                 |
-| `ORCHID_MCP_OAUTH_CLIENT_REGISTRATION_ENABLED` | `true`          | Whether `/register` (RFC 7591 DCR) is exposed                            |
-| `ORCHID_MCP_OAUTH_STORE_BACKEND`           | `memory`            | `memory` \| `http` — multi-replica state sharing                         |
-| `ORCHID_MCP_GATEWAY_STATE_SERVICE_TOKEN`   | —                   | Required when `OAUTH_STORE_BACKEND=http`; matches orchid-api's setting   |
+| Variable                                       | Default             | Purpose                                                                |
+| ---------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
+| `ORCHID_MCP_AUTH_MODE`                         | `service_account`   | `service_account` \| `oauth` \| `discover`                             |
+| `ORCHID_MCP_SERVICE_ACCOUNT_TOKEN`             | —                   | Bearer token (required in `service_account` mode)                      |
+| `ORCHID_MCP_SERVICE_ACCOUNT_AUTH_DOMAIN`       | —                   | Optional `x-auth-domain` override                                      |
+| `ORCHID_MCP_I_UNDERSTAND_THE_RISK`             | `false`             | Required to bind `service_account` + `0.0.0.0`                         |
+| `ORCHID_MCP_OAUTH_ISSUER_URL`                  | filled by discovery | Upstream IdP issuer (for `oauth` mode)                                 |
+| `ORCHID_MCP_OAUTH_AUTHORIZATION_ENDPOINT`      | filled by discovery | Upstream IdP `/authorize` URL                                          |
+| `ORCHID_MCP_OAUTH_CLIENT_ID`                   | filled by discovery | Gateway's public PKCE client_id at the upstream IdP                    |
+| `ORCHID_MCP_OAUTH_AUTH_DOMAIN`                 | filled by discovery | Optional X-Auth-Domain hint forwarded to orchid-api                    |
+| `ORCHID_MCP_OAUTH_SCOPES`                      | filled by discovery | Scope string requested from upstream                                   |
+| `ORCHID_MCP_OAUTH_GATEWAY_BASE_URL`            | —                   | Public URL the gateway is reachable at (goes into metadata)            |
+| `ORCHID_MCP_OAUTH_TOKEN_TTL_S`                 | `3600`              | Lifetime of gateway-issued access tokens                               |
+| `ORCHID_MCP_OAUTH_CLIENT_REGISTRATION_ENABLED` | `true`              | Whether `/register` (RFC 7591 DCR) is exposed                          |
+| `ORCHID_MCP_OAUTH_STORE_BACKEND`               | `memory`            | `memory` \| `http` — multi-replica state sharing                       |
+| `ORCHID_MCP_GATEWAY_STATE_SERVICE_TOKEN`       | —                   | Required when `OAUTH_STORE_BACKEND=http`; matches orchid-api's setting |
 
 **Strict-mode rejections** — the following env vars now fail parsing (operators with stale `.env` files get a loud error rather than a silent no-op): `ORCHID_MCP_OAUTH_TOKEN_ENDPOINT`, `ORCHID_MCP_OAUTH_USERINFO_ENDPOINT`, `ORCHID_MCP_OAUTH_CLIENT_SECRET`, `ORCHID_MCP_OAUTH_USERINFO_SUB_PATH`, `ORCHID_MCP_OAUTH_USERINFO_EMAIL_PATH`, `ORCHID_MCP_OAUTH_EXCHANGE_VIA_API`, `ORCHID_MCP_OAUTH_RESOLVE_VIA_API`, `ORCHID_MCP_OAUTH_REFRESH_VIA_API`, `ORCHID_MCP_OAUTH_IDENTITY_RESOLVER_MODULE`. All of these concerns moved to `orchid-api`.
 
@@ -239,11 +239,11 @@ All config is environment variables prefixed with `ORCHID_MCP_`. `src/settings.t
 
 ### Observability
 
-| Variable                              | Default        | Purpose                                                 |
-| ------------------------------------- | -------------- | ------------------------------------------------------- |
-| `ORCHID_MCP_TRACING_ENABLED`          | `false`        | Gate for OTEL — must be `true` AND the endpoint set     |
-| `ORCHID_MCP_OTEL_SERVICE_NAME`        | `orchid-mcp`   | OTEL `service.name` resource attribute                  |
-| `ORCHID_MCP_OTEL_EXPORTER_OTLP_ENDPOINT` | —           | OTLP HTTP endpoint (e.g. `http://otel-collector:4318`)  |
+| Variable                                 | Default      | Purpose                                                |
+| ---------------------------------------- | ------------ | ------------------------------------------------------ |
+| `ORCHID_MCP_TRACING_ENABLED`             | `false`      | Gate for OTEL — must be `true` AND the endpoint set    |
+| `ORCHID_MCP_OTEL_SERVICE_NAME`           | `orchid-mcp` | OTEL `service.name` resource attribute                 |
+| `ORCHID_MCP_OTEL_EXPORTER_OTLP_ENDPOINT` | —            | OTLP HTTP endpoint (e.g. `http://otel-collector:4318`) |
 
 Each request is traced through a Pino-based correlation context (`AsyncLocalStorage`) so a single MCP tool call's logs can be filtered by `correlationId`. When OTEL is enabled, every upstream HTTP call gets a span attached to the same correlation.
 
@@ -253,36 +253,36 @@ Each request is traced through a Pino-based correlation context (`AsyncLocalStor
 
 ```yaml
 mcp_gateway:
-  tools:
-    orchid_ask:
-      title: "Ask the Restaurant AI"
-      description: "Ask the restaurant multi-agent assistant about menus, …"
-    orchid_new_chat:
-      title: "Start a new dining session"
-      description: "Begin a fresh restaurant-AI conversation."
-    orchid_upload_file:
-      description: "Attach a menu PDF or supplier sheet to the current session."
+    tools:
+        orchid_ask:
+            title: "Ask the Restaurant AI"
+            description: "Ask the restaurant multi-agent assistant about menus, …"
+        orchid_new_chat:
+            title: "Start a new dining session"
+            description: "Begin a fresh restaurant-AI conversation."
+        orchid_upload_file:
+            description: "Attach a menu PDF or supplier sheet to the current session."
 
-    # Pollen + Bloom event tools — re-title to match your domain
-    orchid_signal_emit:
-      title: "Trigger a background workflow"
-      description: "Emit a signal to start a deep-research Bloom run."
-    orchid_bloom_status:
-      title: "Check background work status"
-      description: "Look up the status of a long-running background analysis."
-    orchid_bloom_list:
-      title: "List recent background runs"
-      description: "Browse recent background analyses with optional status / trigger filters."
+        # Pollen + Bloom event tools — re-title to match your domain
+        orchid_signal_emit:
+            title: "Trigger a background workflow"
+            description: "Emit a signal to start a deep-research Bloom run."
+        orchid_bloom_status:
+            title: "Check background work status"
+            description: "Look up the status of a long-running background analysis."
+        orchid_bloom_list:
+            title: "List recent background runs"
+            description: "Browse recent background analyses with optional status / trigger filters."
 
-  prompts:
-    - name: dietary_filter
-      title: "Filter menu by dietary constraint"
-      description: "Ask the menu agent for items matching a dietary constraint."
-      arguments:
-        - { name: constraint, description: "e.g. gluten-free, vegan", required: true }
-      template: |
-        Using the menu agent, list all menu items that are {{constraint}}.
-        Group by course and include key ingredients.
+    prompts:
+        - name: dietary_filter
+          title: "Filter menu by dietary constraint"
+          description: "Ask the menu agent for items matching a dietary constraint."
+          arguments:
+              - { name: constraint, description: "e.g. gluten-free, vegan", required: true }
+          template: |
+              Using the menu agent, list all menu items that are {{constraint}}.
+              Group by course and include key ingredients.
 ```
 
 This is **purely declarative** — the gateway exposes whatever `agents.yaml` declares to the host LLM. Nothing in `orchid_ai/` validates the templates' semantics; only their shape.
@@ -326,11 +326,11 @@ curl http://localhost:9000/health
 
 ## Deployment patterns
 
-| Shape | Use when | Configuration |
-|---|---|---|
-| **Single-replica, `service_account`** | Personal install on a workstation | `AUTH_MODE=service_account`, bind to `127.0.0.1`, optional Redis session map |
-| **Single-replica, `discover` OAuth** | Small team behind a single VM | `AUTH_MODE=discover`, gateway base URL set, `OAUTH_STORE_BACKEND=memory` |
-| **Multi-replica, `discover` OAuth** | Team behind a load balancer | `AUTH_MODE=discover`, `OAUTH_STORE_BACKEND=http`, `GATEWAY_STATE_SERVICE_TOKEN` shared with orchid-api, `SESSION_MAP_BACKEND=redis` |
+| Shape                                 | Use when                          | Configuration                                                                                                                       |
+| ------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Single-replica, `service_account`** | Personal install on a workstation | `AUTH_MODE=service_account`, bind to `127.0.0.1`, optional Redis session map                                                        |
+| **Single-replica, `discover` OAuth**  | Small team behind a single VM     | `AUTH_MODE=discover`, gateway base URL set, `OAUTH_STORE_BACKEND=memory`                                                            |
+| **Multi-replica, `discover` OAuth**   | Team behind a load balancer       | `AUTH_MODE=discover`, `OAUTH_STORE_BACKEND=http`, `GATEWAY_STATE_SERVICE_TOKEN` shared with orchid-api, `SESSION_MAP_BACKEND=redis` |
 
 For multi-replica installs, also enable Redis-backed sessions (`SESSION_MAP_BACKEND=redis`) so reconnects routed by the load balancer find their pre-existing chat binding.
 

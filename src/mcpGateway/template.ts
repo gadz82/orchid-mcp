@@ -9,10 +9,7 @@
 
 const PLACEHOLDER_RE = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_-]*)\s*\}\}/g;
 
-export function renderTemplate(
-    template: string,
-    args: Record<string, string | undefined>,
-): string {
+export function renderTemplate(template: string, args: Record<string, string | undefined>): string {
     return template.replace(PLACEHOLDER_RE, (match, name: string) => {
         const value = args[name];
         return value !== undefined ? value : match;

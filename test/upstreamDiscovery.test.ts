@@ -58,9 +58,7 @@ describe("mergeDiscoveredOAuthSettings", () => {
         const base = makeSettings({ authMode: "discover" });
         const merged = mergeDiscoveredOAuthSettings(base, validOAuth);
         expect(merged.oauthIssuerUrl).toBe("https://acme.example.com");
-        expect(merged.oauthAuthorizationEndpoint).toBe(
-            "https://acme.example.com/oauth2/authorize",
-        );
+        expect(merged.oauthAuthorizationEndpoint).toBe("https://acme.example.com/oauth2/authorize");
         expect(merged.oauthClientId).toBe("mcp-gateway");
         expect(merged.oauthScopes).toBe("api");
     });
@@ -74,9 +72,7 @@ describe("mergeDiscoveredOAuthSettings", () => {
         expect(merged.oauthIssuerUrl).toBe("https://operator-override.example.com");
         expect(merged.oauthClientId).toBe("operator-id");
         // Unset fields still come from discovery.
-        expect(merged.oauthAuthorizationEndpoint).toBe(
-            "https://acme.example.com/oauth2/authorize",
-        );
+        expect(merged.oauthAuthorizationEndpoint).toBe("https://acme.example.com/oauth2/authorize");
     });
 
     it("leaves the default scopes alone when discovery returns empty scope", () => {
@@ -182,9 +178,7 @@ describe("fetchAuthInfoWithRetries", () => {
 describe("applyUpstreamDiscovery", () => {
     it("passes through when authMode is not 'discover'", async () => {
         const base = makeSettings({ authMode: "service_account" });
-        const client = fetcher([
-            { dev_bypass: true, identity_resolver_configured: false },
-        ]);
+        const client = fetcher([{ dev_bypass: true, identity_resolver_configured: false }]);
         const spy = vi.spyOn(client, "getAuthInfo");
         const out = await applyUpstreamDiscovery(base, client, logger);
         expect(out).toBe(base);
@@ -204,9 +198,7 @@ describe("applyUpstreamDiscovery", () => {
 
     it("throws when upstream omits the oauth block", async () => {
         const base = makeSettings({ authMode: "discover" });
-        const client = fetcher([
-            { dev_bypass: false, identity_resolver_configured: true },
-        ]);
+        const client = fetcher([{ dev_bypass: false, identity_resolver_configured: true }]);
         await expect(
             applyUpstreamDiscovery(base, client, logger, { maxAttempts: 1 }),
         ).rejects.toThrow(/did not return an ``oauth`` block/);

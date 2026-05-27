@@ -50,9 +50,7 @@ describe("withToolSpan", () => {
         expect(spans).toHaveLength(1);
         expect(spans[0]?.status.code).toBe(SpanStatusCode.ERROR);
         expect(spans[0]?.status.message).toBe("boom");
-        expect(spans[0]?.events.some((e: { name: string }) => e.name === "exception")).toBe(
-            true,
-        );
+        expect(spans[0]?.events.some((e: { name: string }) => e.name === "exception")).toBe(true);
     });
 
     it("supports nested spans", async () => {

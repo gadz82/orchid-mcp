@@ -51,9 +51,9 @@ export async function startTracing(opts: StartTracingOptions): Promise<void> {
     const { OTLPTraceExporter } = await import("@opentelemetry/exporter-trace-otlp-http").catch(
         () => ({ OTLPTraceExporter: null }),
     );
-    const { UndiciInstrumentation } = await import(
-        "@opentelemetry/instrumentation-undici"
-    ).catch(() => ({ UndiciInstrumentation: null }));
+    const { UndiciInstrumentation } = await import("@opentelemetry/instrumentation-undici").catch(
+        () => ({ UndiciInstrumentation: null }),
+    );
 
     const sdkConfig: Record<string, unknown> = {
         serviceName: opts.serviceName ?? TRACER_NAME,

@@ -101,10 +101,7 @@ export async function verifyUpstreamAuthPosture(
                 throw new OrchidConfigError(verdict.error ?? "upstream auth posture mismatch");
             }
             if (verdict.warning !== undefined) {
-                logger.warn(
-                    { dev_bypass: info.dev_bypass, authMode },
-                    verdict.warning,
-                );
+                logger.warn({ dev_bypass: info.dev_bypass, authMode }, verdict.warning);
             } else {
                 logger.info(
                     {

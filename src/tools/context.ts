@@ -46,9 +46,7 @@ export async function emitProgressNotification(
     sendNotification: NonNullable<ToolHandlerExtra["sendNotification"]>,
     notification: ProgressNotification,
 ): Promise<void> {
-    await (sendNotification as unknown as (n: ProgressNotification) => Promise<void>)(
-        notification,
-    );
+    await (sendNotification as unknown as (n: ProgressNotification) => Promise<void>)(notification);
 }
 
 export function buildRequestContext(extra: ToolHandlerExtra): MCPRequestContext {

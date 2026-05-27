@@ -18,14 +18,11 @@ describe("correlation context", () => {
 
     it("exposes the bound fields inside withCorrelation", async () => {
         const logger = createLogger("silent");
-        await withCorrelation(
-            { requestId: "req-1", mcpSessionId: "sess-1", logger },
-            async () => {
-                expect(getRequestId()).toBe("req-1");
-                expect(getCorrelation()?.mcpSessionId).toBe("sess-1");
-                expect(getCorrelationLogger()).toBe(logger);
-            },
-        );
+        await withCorrelation({ requestId: "req-1", mcpSessionId: "sess-1", logger }, async () => {
+            expect(getRequestId()).toBe("req-1");
+            expect(getCorrelation()?.mcpSessionId).toBe("sess-1");
+            expect(getCorrelationLogger()).toBe(logger);
+        });
     });
 
     it("isolates concurrent async contexts", async () => {

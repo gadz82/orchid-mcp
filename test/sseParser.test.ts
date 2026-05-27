@@ -44,25 +44,18 @@ describe("parseSSE", () => {
     });
 
     it("handles a payload split across chunk boundaries", async () => {
-        const events = await collect(
-            streamFromStrings(["data: hel", "lo\n", "\n"]),
-        );
+        const events = await collect(streamFromStrings(["data: hel", "lo\n", "\n"]));
         expect(events).toEqual([{ event: "message", data: "hello" }]);
     });
 
     it("ignores comment lines (starting with :)", async () => {
-        const events = await collect(
-            streamFromStrings([": keepalive\n", "data: payload\n\n"]),
-        );
+        const events = await collect(streamFromStrings([": keepalive\n", "data: payload\n\n"]));
         expect(events).toEqual([{ event: "message", data: "payload" }]);
     });
 
     it("ignores unknown fields and keeps id sticky across events", async () => {
         const events = await collect(
-            streamFromStrings([
-                "id: 1\nretry: 5000\ndata: first\n\n",
-                "data: second\n\n",
-            ]),
+            streamFromStrings(["id: 1\nretry: 5000\ndata: first\n\n", "data: second\n\n"]),
         );
         expect(events).toEqual([
             { event: "message", data: "first", id: "1" },

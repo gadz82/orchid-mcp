@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-    evaluateUpstreamPosture,
-    verifyUpstreamAuthPosture,
-} from "../src/auth/upstreamPosture.js";
+import { evaluateUpstreamPosture, verifyUpstreamAuthPosture } from "../src/auth/upstreamPosture.js";
 import { OrchidConfigError, OrchidGatewayError } from "../src/errors.js";
 import { createLogger } from "../src/observability/logger.js";
 import type { AuthInfo } from "../src/http/orchidClient.js";
@@ -53,9 +50,7 @@ describe("verifyUpstreamAuthPosture", () => {
     const logger = createLogger("silent");
 
     function fakeClient(result: AuthInfo | Error | Error[]) {
-        const queue: (AuthInfo | Error)[] = Array.isArray(result)
-            ? [...result]
-            : [result];
+        const queue: (AuthInfo | Error)[] = Array.isArray(result) ? [...result] : [result];
         return {
             getAuthInfo: async (): Promise<AuthInfo> => {
                 const next = queue.shift() ?? queue[queue.length - 1]!;

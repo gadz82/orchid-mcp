@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/gadz82/orchid-mcp/compare/v1.2.1...v1.2.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* update npm OIDC token handling and add registry URL in release workflow ([856a2df](https://github.com/gadz82/orchid-mcp/commit/856a2dff716987cb100d730433a4e1f81608bbad))
+
 ## [1.2.1](https://github.com/gadz82/orchid-mcp/compare/v1.2.0...v1.2.1) (2026-05-27)
 
 

@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/gadz82/orchid-mcp/compare/v1.0.0...v1.1.0) (2026-05-27)
+
+
+### Features
+
+* remove unused registry-url configuration in release workflow ([79c8b2c](https://github.com/gadz82/orchid-mcp/commit/79c8b2ce4b8ef77489370cda39ab9deedbee8802))
+
 # 1.0.0 (2026-05-27)
 
 

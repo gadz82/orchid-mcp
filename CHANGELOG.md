@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/gadz82/orchid-mcp/compare/v1.2.3...v1.2.4) (2026-05-27)
+
+
+### Bug Fixes
+
+* add repository metadata to package.json ([7bc53c7](https://github.com/gadz82/orchid-mcp/commit/7bc53c731b79e7c343661cae18d3e00fd8ddad63))
+
 ## [1.2.3](https://github.com/gadz82/orchid-mcp/compare/v1.2.2...v1.2.3) (2026-05-27)
 
 

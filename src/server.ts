@@ -49,6 +49,7 @@ export interface BuiltServer {
     close: () => Promise<void>;
 }
 
+// ORCHID-MEM: 01a1a0c1-dcfb-752e-bd40-60287b0a15de — MCP gateway server factory
 export async function buildServer(deps: BuildServerDeps): Promise<BuiltServer> {
     const { ctx } = deps;
     const { logger } = ctx;
